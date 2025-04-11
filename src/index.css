@@ -34,3 +34,8 @@ body {
     100% { opacity: 0.4; transform: scale(1.05); }
   }
   
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
