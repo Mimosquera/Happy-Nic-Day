@@ -19,6 +19,11 @@ const ComplimentMachine = () => {
   return (
     <div className="page">
       <h2>Daily Compliment Machine</h2>
+      <img
+        src="/smiling-speech-bubble.png"
+        alt="smiling-speech-bubble"
+        style={{ width: '300px' }}
+      />
       <button onClick={giveCompliment}>Give Me Compliment</button>
       {compliment && <p>{compliment}</p>}
       <BackButton />

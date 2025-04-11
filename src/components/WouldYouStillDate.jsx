@@ -14,6 +14,11 @@ const WouldYouStillDate = () => {
   return (
     <div className="page">
       <h2>{questions[index]}</h2>
+      <img
+        src="/heart-key.png"
+        alt="heart-key"
+        style={{ width: '300px' }}
+      />
       <button onClick={() => setIndex((index + 1) % questions.length)}>Next Question</button>
       <p>Answer wisely…</p>
       <BackButton />
