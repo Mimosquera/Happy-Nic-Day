@@ -7,6 +7,7 @@ const Home = () => {
   const [showSecret, setShowSecret] = useState(false);
   const [showShakeSecret, setShowShakeSecret] = useState(false);
 
+  // 🎉 Confetti on load
   useEffect(() => {
     confetti({
       particleCount: 150,
@@ -15,7 +16,28 @@ const Home = () => {
     });
   }, []);
 
-  // 🖱️ Long Press Easter Egg
+  // 📱 iOS motion permission request
+  useEffect(() => {
+    const enableMotion = async () => {
+      if (
+        typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function'
+      ) {
+        try {
+          const res = await DeviceMotionEvent.requestPermission();
+          if (res !== 'granted') {
+            console.warn('Motion permission not granted');
+          }
+        } catch (err) {
+          console.error('Motion permission error:', err);
+        }
+      }
+    };
+
+    enableMotion();
+  }, []);
+
+  // 🤲 Long press on the heart
   useEffect(() => {
     let timer;
     const heart = document.getElementById('heart');
@@ -45,19 +67,29 @@ const Home = () => {
     };
   }, []);
 
-  // 📱 Shake Detection Easter Egg
+  // 📳 Shake detection
   useEffect(() => {
-    let lastX, lastY, lastZ;
-    let shakeThreshold = 15;
+    let lastTime = new Date();
+    let lastX = null, lastY = null, lastZ = null;
+    const threshold = 20;
 
-    const handleMotion = (e) => {
-      const { x, y, z } = e.accelerationIncludingGravity || {};
-      if (x === null || y === null || z === null) return;
+    const handleMotion = (event) => {
+      const current = event.accelerationIncludingGravity;
+      if (!current) return;
 
-      if (lastX !== null) {
-        const delta = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
-        if (delta > shakeThreshold) {
+      const { x, y, z } = current;
+
+      if (lastX !== null && lastY !== null && lastZ !== null) {
+        const deltaX = Math.abs(x - lastX);
+        const deltaY = Math.abs(y - lastY);
+        const deltaZ = Math.abs(z - lastZ);
+        const total = deltaX + deltaY + deltaZ;
+
+        const now = new Date();
+        if (total > threshold && now - lastTime > 1000) {
+          lastTime = now;
           setShowShakeSecret(true);
+          confetti(); // 🎉 optional: confetti when shaking
         }
       }
 
@@ -66,13 +98,8 @@ const Home = () => {
       lastZ = z;
     };
 
-    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
-      window.addEventListener('devicemotion', handleMotion);
-    }
-
-    return () => {
-      window.removeEventListener('devicemotion', handleMotion);
-    };
+    window.addEventListener('devicemotion', handleMotion);
+    return () => window.removeEventListener('devicemotion', handleMotion);
   }, []);
 
   return (
@@ -83,7 +110,7 @@ const Home = () => {
       <Link to="/would-you-still-date"><button>Would You Still Date Me If…</button></Link>
       <Link to="/compliments"><button>Compliment Machine</button></Link>
 
-      <img 
+      <img
         id="heart"
         src="/purple-heart-pulse.gif"
         alt="purple-heart-pulse"
@@ -100,7 +127,7 @@ const Home = () => {
 
       {showShakeSecret && !showSecret && (
         <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
-          📱 Whoa! You shook things up… just like you shook up my world.
+          📱 You shook things up… just like you shook up my world 🌎💘
         </div>
       )}
     </div>
