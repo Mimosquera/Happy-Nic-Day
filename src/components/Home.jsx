@@ -130,12 +130,31 @@ const Home = () => {
 
       {/* Floating hearts triggered ONLY by long press */}
       {longPressTriggered && (
-        <div className="floating-hearts">
-          <span className="heart">💜</span>
-          <span className="heart">🤍</span>
-          <span className="heart">💜</span>
-        </div>
-      )}
+  <div className="floating-hearts">
+    {Array.from({ length: 10 }).map((_, i) => {
+      const left = Math.random() * 100; // percent
+      const size = Math.random() * 1.5 + 1; // 1x to 2.5x
+      const delay = Math.random() * 5; // seconds
+      const duration = Math.random() * 5 + 8; // 8 to 13s
+      const emoji = i % 2 === 0 ? '💜' : '🤍';
+
+      return (
+        <span
+          key={i}
+          className="heart"
+          style={{
+            left: `${left}%`,
+            fontSize: `${size}rem`,
+            animationDelay: `${delay}s`,
+            animationDuration: `${duration}s`,
+          }}
+        >
+          {emoji}
+        </span>
+      );
+    })}
+  </div>
+)}
 
       {(longPressTriggered || shakeTriggered) && (
         <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
