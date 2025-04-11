@@ -4,9 +4,9 @@ import '../index.css';
 import confetti from 'canvas-confetti';
 
 const Home = () => {
-  const [showSecret, setShowSecret] = useState(false);
-  const [showShakeSecret, setShowShakeSecret] = useState(false);
   const [motionAllowed, setMotionAllowed] = useState(false);
+  const [longPressTriggered, setLongPressTriggered] = useState(false);
+  const [shakeTriggered, setShakeTriggered] = useState(false);
 
   // 🎉 Confetti on page load
   useEffect(() => {
@@ -17,7 +17,7 @@ const Home = () => {
     });
   }, []);
 
-  // ✅ Enable motion via tap (iOS 13+)
+  // ✅ Enable motion on iOS
   const enableMotionAccess = async () => {
     if (
       typeof DeviceMotionEvent !== 'undefined' &&
@@ -34,19 +34,18 @@ const Home = () => {
         console.error('Motion permission error:', err);
       }
     } else {
-      // Android or unsupported
       setMotionAllowed(true);
     }
   };
 
-  // 🤲 Long press on the heart image
+  // 🤲 Long Press on the heart image
   useEffect(() => {
     let timer;
     const heart = document.getElementById('heart');
 
     const start = () => {
       timer = setTimeout(() => {
-        setShowSecret(true);
+        setLongPressTriggered(true);
       }, 2000);
     };
 
@@ -69,7 +68,7 @@ const Home = () => {
     };
   }, []);
 
-  // 📳 Shake detection
+  // 📳 Shake Detection
   useEffect(() => {
     if (!motionAllowed) return;
 
@@ -92,8 +91,8 @@ const Home = () => {
         const now = new Date();
         if (total > threshold && now - lastTime > 1000) {
           lastTime = now;
-          setShowShakeSecret(true);
-          confetti(); // 💥 shake confetti
+          setShakeTriggered(true);
+          confetti();
         }
       }
 
@@ -129,15 +128,23 @@ const Home = () => {
         </button>
       )}
 
-      {showSecret && (
-        <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
-          ✨ You held my heart long enough... just like real life 💜
+      {/* Floating hearts triggered ONLY by long press */}
+      {longPressTriggered && (
+        <div className="floating-hearts">
+          <span className="heart">💜</span>
+          <span className="heart">🤍</span>
+          <span className="heart">💜</span>
         </div>
       )}
 
-      {showShakeSecret && !showSecret && (
+      {(longPressTriggered || shakeTriggered) && (
         <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
-          📱 You shook things up… just like you shook up my world 🌎💘
+          {longPressTriggered && (
+            <p>✨ You held my heart long enough... just like real life 💜</p>
+          )}
+          {shakeTriggered && (
+            <p>📱 You shook things up… just like you shook up my world 🌎💘</p>
+          )}
         </div>
       )}
     </div>

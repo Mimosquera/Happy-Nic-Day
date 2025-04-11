@@ -28,6 +28,52 @@ body {
     animation: fadeOut 1s ease-in forwards;
     filter: brightness(30%) saturate(0.5);
   }
+
+  .floating-hearts {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 100;
+  }
+  
+  .floating-hearts .heart {
+    position: absolute;
+    font-size: 2rem;
+    animation: floatUp 6s ease-in-out infinite;
+    opacity: 0;
+  }
+  
+  .floating-hearts .heart:nth-child(1) {
+    left: -30px;
+    animation-delay: 0s;
+  }
+  
+  .floating-hearts .heart:nth-child(2) {
+    left: 0;
+    animation-delay: 1.5s;
+  }
+  
+  .floating-hearts .heart:nth-child(3) {
+    left: 30px;
+    animation-delay: 3s;
+  }
+  
+  @keyframes floatUp {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-300px) scale(1.3);
+      opacity: 0;
+    }
+  }
+  
   
   @keyframes fadeOut {
     0% { opacity: 1; transform: scale(1); }
