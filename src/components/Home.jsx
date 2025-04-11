@@ -42,22 +42,29 @@ const Home = () => {
   useEffect(() => {
     let timer;
     const heart = document.getElementById('heart');
-
+  
     const start = () => {
       timer = setTimeout(() => {
         setLongPressTriggered(true);
       }, 2000);
     };
-
+  
     const cancel = () => clearTimeout(timer);
-
-    heart?.addEventListener('touchstart', start);
-    heart?.addEventListener('mousedown', start);
-    heart?.addEventListener('touchend', cancel);
-    heart?.addEventListener('mouseup', cancel);
-    heart?.addEventListener('mouseleave', cancel);
-    heart?.addEventListener('touchmove', cancel);
-
+  
+    if (heart) {
+      heart.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        start();
+      }, { passive: false });
+  
+      heart.addEventListener('mousedown', start);
+      heart.addEventListener('touchend', cancel);
+      heart.addEventListener('mouseup', cancel);
+      heart.addEventListener('mouseleave', cancel);
+      heart.addEventListener('touchmove', cancel);
+      heart.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+  
     return () => {
       heart?.removeEventListener('touchstart', start);
       heart?.removeEventListener('mousedown', start);
@@ -65,8 +72,9 @@ const Home = () => {
       heart?.removeEventListener('mouseup', cancel);
       heart?.removeEventListener('mouseleave', cancel);
       heart?.removeEventListener('touchmove', cancel);
+      heart?.removeEventListener('contextmenu', (e) => e.preventDefault());
     };
-  }, []);
+  }, []);  
 
   // 📳 Shake Detection
   useEffect(() => {
