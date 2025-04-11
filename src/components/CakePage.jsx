@@ -99,12 +99,12 @@ const CakePage = () => {
 
       {!candlesOut ? (
         <button onClick={startListening} disabled={listening}>
-          {listening ? 'Listening...' : 'Blow Candles!'}
+          {listening ? 'Listening...' : 'Blow Candles! 💨'}
         </button>
       ) : (
         <>
           <p>Your wish better be about me.</p>
-          <button onClick={resetCake}>New Cake</button>
+          <button onClick={resetCake}>New Cake 🎂</button>
         </>
       )}
 

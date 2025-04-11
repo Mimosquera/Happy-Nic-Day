@@ -70,7 +70,7 @@ const ComplimentMachine = () => {
         alt="smiling-speech-bubble"
         style={{ width: '300px' }}
       />
-      <button onClick={giveCompliment}>Give Me Compliment 💜</button>
+      <button onClick={giveCompliment}>Give Me Compliment 💌</button>
       {index >= 0 && (
         <p key={fadeKey} className="fade-in" style={{ maxWidth: '80%', margin: '20px auto' }}>
           {shuffled[index]}
