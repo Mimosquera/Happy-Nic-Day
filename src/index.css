@@ -5,20 +5,30 @@ body {
   padding: 20px;
 }
   
-  button {
-    margin: 10px;
-    padding: 10px 20px;
-    background-color: #8b00b6;
-    border: none;
-    color: white;
-    font-size: 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #aa5dc1;
-  }
+button {
+  margin: 10px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #b15eff, #8b00b6);
+  color: white;
+  font-size: 1.05rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(139, 0, 182, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #c37bff, #aa5dc1);
+  transform: scale(1.05);
+  box-shadow: 0 6px 14px rgba(139, 0, 182, 0.4);
+}
+
+button:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 6px rgba(139, 0, 182, 0.25);
+}
   
   .page {
     margin-top: 40px;

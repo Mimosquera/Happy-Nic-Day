@@ -76,7 +76,7 @@ const WouldYouStillDate = () => {
         alt="heart-key"
         style={{ width: '300px' }}
       />
-      <button onClick={nextQuestion}>Next Question</button>
+      <button onClick={nextQuestion}>Next Question 💭</button>
       <p>Answer wisely…</p>
       <BackButton />
     </div>
