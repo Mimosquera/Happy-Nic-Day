@@ -61,7 +61,7 @@ const CakePage = () => {
     const volume = rms * 10; // scale up
     console.log('💨 Mic RMS volume:', volume.toFixed(2));
 
-    if (volume > 8.23) {
+    if (volume > 8.5) {
       console.log('🎉 Wish detected!');
       stopListening();
       setCandlesOut(true);
