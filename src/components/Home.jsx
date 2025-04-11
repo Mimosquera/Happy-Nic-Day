@@ -51,30 +51,38 @@ const Home = () => {
   
     const cancel = () => clearTimeout(timer);
   
-    if (heart) {
-      heart.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        start();
-      }, { passive: false });
+    const handleTouchStart = (e) => {
+      e.preventDefault();
+      start();
+    };
   
-      heart.addEventListener('mousedown', start);
-      heart.addEventListener('touchend', cancel);
-      heart.addEventListener('mouseup', cancel);
-      heart.addEventListener('mouseleave', cancel);
-      heart.addEventListener('touchmove', cancel);
-      heart.addEventListener('contextmenu', (e) => e.preventDefault());
+    const handleMouseDown = start;
+    const handleTouchEnd = cancel;
+    const handleMouseUp = cancel;
+    const handleLeave = cancel;
+    const handleTouchMove = cancel;
+    const handleContextMenu = (e) => e.preventDefault();
+  
+    if (heart) {
+      heart.addEventListener('touchstart', handleTouchStart, { passive: false });
+      heart.addEventListener('mousedown', handleMouseDown);
+      heart.addEventListener('touchend', handleTouchEnd);
+      heart.addEventListener('mouseup', handleMouseUp);
+      heart.addEventListener('mouseleave', handleLeave);
+      heart.addEventListener('touchmove', handleTouchMove);
+      heart.addEventListener('contextmenu', handleContextMenu);
     }
   
     return () => {
-      heart?.removeEventListener('touchstart', start);
-      heart?.removeEventListener('mousedown', start);
-      heart?.removeEventListener('touchend', cancel);
-      heart?.removeEventListener('mouseup', cancel);
-      heart?.removeEventListener('mouseleave', cancel);
-      heart?.removeEventListener('touchmove', cancel);
-      heart?.removeEventListener('contextmenu', (e) => e.preventDefault());
+      heart?.removeEventListener('touchstart', handleTouchStart);
+      heart?.removeEventListener('mousedown', handleMouseDown);
+      heart?.removeEventListener('touchend', handleTouchEnd);
+      heart?.removeEventListener('mouseup', handleMouseUp);
+      heart?.removeEventListener('mouseleave', handleLeave);
+      heart?.removeEventListener('touchmove', handleTouchMove);
+      heart?.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, []);  
+  }, []);    
 
   // 📳 Shake Detection
   useEffect(() => {
