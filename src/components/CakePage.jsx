@@ -1,97 +1,134 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import BackButton from './BackButton';
 
 const CakePage = () => {
   const [candlesOut, setCandlesOut] = useState(false);
   const [listening, setListening] = useState(false);
+  const [cheaterMode, setCheaterMode] = useState(false);
+
+  const audioRef = useRef(new Audio('/blow-out.mp3'));
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
-  const mediaStreamRef = useRef(null);
   const dataRef = useRef(null);
-  const audioRef = useRef(new Audio('/blow-out.mp3'));
+  const mediaStreamRef = useRef(null);
+  const rafIdRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      stopListening(); // clean up on unmount
+    };
+  }, []);
 
   const startListening = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("🎤 Got audio stream:", stream);
       mediaStreamRef.current = stream;
 
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = audioContext;
 
-      // Boost volume just in case
-      const gainNode = audioContextRef.current.createGain();
-      gainNode.gain.value = 2.0;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
 
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 512; // Set before creating data buffer
-      dataRef.current = new Uint8Array(analyserRef.current.frequencyBinCount); // freqBinCount = fftSize / 2
+      const dataArray = new Uint8Array(analyser.fftSize);
+      dataRef.current = dataArray;
+      analyserRef.current = analyser;
 
-      // Connect nodes: mic → gain → analyser
-      source.connect(gainNode);
-      gainNode.connect(analyserRef.current);
+      source.connect(analyser);
 
       setListening(true);
+      console.log('🎤 Started listening');
 
-      const detectBlow = () => {
-        analyserRef.current.getByteFrequencyData(dataRef.current);
+      detectWish();
+    } catch (error) {
+      console.error('🚫 Mic error:', error);
+    }
+  };
 
-        let volume = 0;
-        for (let i = 0; i < dataRef.current.length; i++) {
-          volume += dataRef.current[i];
-        }
-        volume = volume / dataRef.current.length;
-        console.log('📈 Mic volume (frequency):', volume);
+  const detectWish = () => {
+    if (!analyserRef.current || !dataRef.current) return;
 
-        if (volume > 15) { // Sensitivity threshold
-          stopListening();
-          setCandlesOut(true);
-          audioRef.current.play();
-        } else if (listening) {
-          requestAnimationFrame(detectBlow);
-        }
-      };
+    analyserRef.current.getByteTimeDomainData(dataRef.current);
 
-      detectBlow();
-    } catch (err) {
-      console.error('🚫 Microphone access error:', err);
+    let sum = 0;
+    for (let i = 0; i < dataRef.current.length; i++) {
+      const deviation = dataRef.current[i] - 128;
+      sum += deviation * deviation;
+    }
+
+    const rms = Math.sqrt(sum / dataRef.current.length);
+    const volume = rms * 10; // scale up
+    console.log('💨 Mic RMS volume:', volume.toFixed(2));
+
+    if (volume > 7.5) {
+      console.log('🎉 Wish detected!');
+      stopListening();
+      setCandlesOut(true);
+      audioRef.current.play();
+    } else {
+      rafIdRef.current = requestAnimationFrame(detectWish);
     }
   };
 
   const stopListening = () => {
-    setListening(false);
+    if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
     }
+    setListening(false);
+    console.log('🛑 Stopped listening');
   };
 
   const resetCake = () => {
+    stopListening();
     setCandlesOut(false);
-    setListening(false);
+    setCheaterMode(false);
   };
 
   return (
     <div className="page">
       <h2>Make a wish!</h2>
-      <img 
-        src="/cake.png" 
-        alt="birthday cake" 
+      <img
+        src="/cake.png"
+        alt="birthday cake"
         className={candlesOut ? 'blow-out' : ''}
-        style={{ width: '300px', transition: 'filter 0.4s ease' }} 
+        style={{ width: '300px', transition: 'filter 0.4s ease' }}
       />
+
       {!candlesOut ? (
-        <button onClick={startListening} disabled={listening}>
-          {listening ? 'Listening...' : 'Blow Candles!' }
-        </button>
+        <>
+          <button onClick={startListening} disabled={listening}>
+            {listening ? 'Listening...' : 'Blow Candles!'}
+          </button>
+
+          {!listening && (
+            <button
+              style={{ marginTop: '0.8rem' }}
+              onClick={() => {
+                setCandlesOut(true);
+                setCheaterMode(true);
+                audioRef.current.play();
+              }}
+            >
+              Blow (cheater mode 😏)
+            </button>
+          )}
+        </>
       ) : (
         <>
-          <p>Your wish better be about me.</p>
+          <p>
+            {cheaterMode
+              ? "I'll allow it... just this once 😌"
+              : "Your wish better be about me."}
+          </p>
           <button onClick={resetCake}>New Cake</button>
         </>
       )}
+
       <BackButton />
     </div>
   );
