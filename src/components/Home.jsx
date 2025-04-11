@@ -6,8 +6,9 @@ import confetti from 'canvas-confetti';
 const Home = () => {
   const [showSecret, setShowSecret] = useState(false);
   const [showShakeSecret, setShowShakeSecret] = useState(false);
+  const [motionAllowed, setMotionAllowed] = useState(false);
 
-  // 🎉 Confetti on load
+  // 🎉 Confetti on page load
   useEffect(() => {
     confetti({
       particleCount: 150,
@@ -16,28 +17,29 @@ const Home = () => {
     });
   }, []);
 
-  // 📱 iOS motion permission request
-  useEffect(() => {
-    const enableMotion = async () => {
-      if (
-        typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function'
-      ) {
-        try {
-          const res = await DeviceMotionEvent.requestPermission();
-          if (res !== 'granted') {
-            console.warn('Motion permission not granted');
-          }
-        } catch (err) {
-          console.error('Motion permission error:', err);
+  // ✅ Enable motion via tap (iOS 13+)
+  const enableMotionAccess = async () => {
+    if (
+      typeof DeviceMotionEvent !== 'undefined' &&
+      typeof DeviceMotionEvent.requestPermission === 'function'
+    ) {
+      try {
+        const response = await DeviceMotionEvent.requestPermission();
+        if (response === 'granted') {
+          setMotionAllowed(true);
+        } else {
+          alert('Motion access denied 😢');
         }
+      } catch (err) {
+        console.error('Motion permission error:', err);
       }
-    };
+    } else {
+      // Android or unsupported
+      setMotionAllowed(true);
+    }
+  };
 
-    enableMotion();
-  }, []);
-
-  // 🤲 Long press on the heart
+  // 🤲 Long press on the heart image
   useEffect(() => {
     let timer;
     const heart = document.getElementById('heart');
@@ -69,6 +71,8 @@ const Home = () => {
 
   // 📳 Shake detection
   useEffect(() => {
+    if (!motionAllowed) return;
+
     let lastTime = new Date();
     let lastX = null, lastY = null, lastZ = null;
     const threshold = 20;
@@ -89,7 +93,7 @@ const Home = () => {
         if (total > threshold && now - lastTime > 1000) {
           lastTime = now;
           setShowShakeSecret(true);
-          confetti(); // 🎉 optional: confetti when shaking
+          confetti(); // 💥 shake confetti
         }
       }
 
@@ -100,7 +104,7 @@ const Home = () => {
 
     window.addEventListener('devicemotion', handleMotion);
     return () => window.removeEventListener('devicemotion', handleMotion);
-  }, []);
+  }, [motionAllowed]);
 
   return (
     <div className="home-container">
@@ -118,6 +122,12 @@ const Home = () => {
         height={250}
         style={{ marginTop: '1.5rem' }}
       />
+
+      {!motionAllowed && (
+        <button style={{ marginTop: '1.5rem' }} onClick={enableMotionAccess}>
+          👉 Tap here to unlock a surprise!
+        </button>
+      )}
 
       {showSecret && (
         <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
