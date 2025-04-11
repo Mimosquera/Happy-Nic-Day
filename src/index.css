@@ -101,3 +101,31 @@ body {
     }
   }
   
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.06);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes pulseOutline {
+    0% {
+      opacity: 0.6;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+    100% {
+      opacity: 0.6;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  

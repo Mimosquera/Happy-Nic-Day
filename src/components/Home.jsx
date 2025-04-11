@@ -7,6 +7,8 @@ const Home = () => {
   const [motionAllowed, setMotionAllowed] = useState(false);
   const [longPressTriggered, setLongPressTriggered] = useState(false);
   const [shakeTriggered, setShakeTriggered] = useState(false);
+  const [holdingHeart, setHoldingHeart] = useState(false);
+
 
   // 🎉 Confetti on page load
   useEffect(() => {
@@ -49,14 +51,21 @@ const Home = () => {
       }, 2000);
     };
   
-    const cancel = () => clearTimeout(timer);
+    const cancel = () => {
+      setHoldingHeart(false);
+      clearTimeout(timer);
+    };
   
     const handleTouchStart = (e) => {
       e.preventDefault();
+      setHoldingHeart(true);
       start();
     };
   
-    const handleMouseDown = start;
+    const handleMouseDown = () => {
+      setHoldingHeart(true);
+      start();
+    };
     const handleTouchEnd = cancel;
     const handleMouseUp = cancel;
     const handleLeave = cancel;
@@ -129,14 +138,36 @@ const Home = () => {
       <Link to="/would-you-still-date"><button>Would You Still Date Me If…</button></Link>
       <Link to="/compliments"><button>Compliment Machine</button></Link>
 
-      <img
-        id="heart"
-        src="/purple-heart-pulse.gif"
-        alt="purple-heart-pulse"
-        width={250}
-        height={250}
-        style={{ marginTop: '1.5rem' }}
-      />
+      <div style={{ position: 'relative', display: 'inline-block', marginTop: '1.5rem' }}>
+        <img
+          id="heart"
+          src="/purple-heart-pulse.gif"
+          alt="purple-heart-pulse"
+          width={250}
+          height={250}
+          style={{
+            borderRadius: '50%',
+            animation: holdingHeart ? 'pulse 1s infinite' : 'none',
+          }}
+        />
+        {holdingHeart && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '260px',
+              height: '260px',
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)',
+              border: '3px dashed #d3b3ff',
+              animation: 'pulseOutline 1.5s ease-in-out infinite',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+      </div>
+
 
       {!motionAllowed && (
         <button style={{ marginTop: '1.5rem' }} onClick={enableMotionAccess}>
