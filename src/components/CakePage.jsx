@@ -4,7 +4,6 @@ import BackButton from './BackButton';
 const CakePage = () => {
   const [candlesOut, setCandlesOut] = useState(false);
   const [listening, setListening] = useState(false);
-  const [cheaterMode, setCheaterMode] = useState(false);
 
   const audioRef = useRef(new Audio('/blow-out.mp3'));
   const audioContextRef = useRef(null);
@@ -61,7 +60,7 @@ const CakePage = () => {
     const volume = rms * 10; // scale up
     console.log('💨 Mic RMS volume:', volume.toFixed(2));
 
-    if (volume > 150) {
+    if (volume > 300) {
       console.log('🎉 Wish detected!');
       stopListening();
       setCandlesOut(true);
@@ -86,7 +85,6 @@ const CakePage = () => {
   const resetCake = () => {
     stopListening();
     setCandlesOut(false);
-    setCheaterMode(false);
   };
 
   return (
@@ -100,31 +98,12 @@ const CakePage = () => {
       />
 
       {!candlesOut ? (
-        <>
-          <button onClick={startListening} disabled={listening}>
-            {listening ? 'Listening...' : 'Blow Candles!'}
-          </button>
-
-          {!listening && (
-            <button
-              style={{ marginTop: '0.8rem' }}
-              onClick={() => {
-                setCandlesOut(true);
-                setCheaterMode(true);
-                audioRef.current.play();
-              }}
-            >
-              Blow (cheater mode 😏)
-            </button>
-          )}
-        </>
+        <button onClick={startListening} disabled={listening}>
+          {listening ? 'Listening...' : 'Blow Candles!'}
+        </button>
       ) : (
         <>
-          <p>
-            {cheaterMode
-              ? "I'll allow it... just this once 😌"
-              : "Your wish better be about me."}
-          </p>
+          <p>Your wish better be about me.</p>
           <button onClick={resetCake}>New Cake</button>
         </>
       )}
