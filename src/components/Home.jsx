@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 
 const Home = () => {
   const [showSecret, setShowSecret] = useState(false);
+  const [showShakeSecret, setShowShakeSecret] = useState(false);
 
   useEffect(() => {
     confetti({
@@ -14,6 +15,7 @@ const Home = () => {
     });
   }, []);
 
+  // 🖱️ Long Press Easter Egg
   useEffect(() => {
     let timer;
     const heart = document.getElementById('heart');
@@ -21,7 +23,7 @@ const Home = () => {
     const start = () => {
       timer = setTimeout(() => {
         setShowSecret(true);
-      }, 2000); // 2-second long press
+      }, 2000);
     };
 
     const cancel = () => clearTimeout(timer);
@@ -40,6 +42,36 @@ const Home = () => {
       heart?.removeEventListener('mouseup', cancel);
       heart?.removeEventListener('mouseleave', cancel);
       heart?.removeEventListener('touchmove', cancel);
+    };
+  }, []);
+
+  // 📱 Shake Detection Easter Egg
+  useEffect(() => {
+    let lastX, lastY, lastZ;
+    let shakeThreshold = 15;
+
+    const handleMotion = (e) => {
+      const { x, y, z } = e.accelerationIncludingGravity || {};
+      if (x === null || y === null || z === null) return;
+
+      if (lastX !== null) {
+        const delta = Math.abs(x - lastX) + Math.abs(y - lastY) + Math.abs(z - lastZ);
+        if (delta > shakeThreshold) {
+          setShowShakeSecret(true);
+        }
+      }
+
+      lastX = x;
+      lastY = y;
+      lastZ = z;
+    };
+
+    if (typeof window !== 'undefined' && 'DeviceMotionEvent' in window) {
+      window.addEventListener('devicemotion', handleMotion);
+    }
+
+    return () => {
+      window.removeEventListener('devicemotion', handleMotion);
     };
   }, []);
 
@@ -63,6 +95,12 @@ const Home = () => {
       {showSecret && (
         <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
           ✨ You held my heart long enough... just like real life 💜
+        </div>
+      )}
+
+      {showShakeSecret && !showSecret && (
+        <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
+          📱 Whoa! You shook things up… just like you shook up my world.
         </div>
       )}
     </div>
