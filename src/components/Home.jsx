@@ -48,7 +48,7 @@ const Home = () => {
     const start = () => {
       timer = setTimeout(() => {
         setLongPressTriggered(true);
-      }, 2000);
+      }, 1000);
     };
   
     const cancel = () => {
@@ -56,11 +56,31 @@ const Home = () => {
       clearTimeout(timer);
     };
   
-    const handleTouchStart = (e) => {
+    const handleTouchStart = async (e) => {
       e.preventDefault();
       setHoldingHeart(true);
+    
+      // Request motion permission if not already granted
+      if (
+        !motionAllowed &&
+        typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function'
+      ) {
+        try {
+          const result = await DeviceMotionEvent.requestPermission();
+          if (result === 'granted') {
+            setMotionAllowed(true);
+          }
+        } catch (err) {
+          console.warn('Motion permission denied or failed:', err);
+        }
+      } else {
+        setMotionAllowed(true);
+      }
+    
       start();
     };
+    
   
     const handleMouseDown = () => {
       setHoldingHeart(true);
@@ -169,11 +189,6 @@ const Home = () => {
       </div>
 
 
-      {!motionAllowed && (
-        <button style={{ marginTop: '1.5rem' }} onClick={enableMotionAccess}>
-          👉 Tap here to unlock a surprise!
-        </button>
-      )}
 
       {/* Floating hearts triggered ONLY by long press */}
       {longPressTriggered && (
