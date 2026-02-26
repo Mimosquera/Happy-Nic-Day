@@ -9,15 +9,15 @@ const needsMotionPermission =
 
 const Home = () => {
   const [shakeEnabled, setShakeEnabled] = useState(false);
-  const [messageVisible, setMessageVisible] = useState(false);
+  const [activeMessage, setActiveMessage] = useState(null); // 'heart' | 'shake'
   const [heartsVisible, setHeartsVisible] = useState(false);
-  const [shakeTriggered, setShakeTriggered] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
   const [ringVisible, setRingVisible] = useState(false);
   const [popping, setPopping] = useState(false);
   const [balloonPopped, setBalloonPopped] = useState(false);
   const heartRef = useRef(null);
   const messageVisibleRef = useRef(false);
+  const touchOriginRef = useRef(null);
 
   const heartData = useMemo(() =>
     Array.from({ length: 10 }, (_, i) => ({
@@ -59,7 +59,7 @@ const Home = () => {
       timer = setTimeout(() => {
         if (!messageVisibleRef.current) {
           messageVisibleRef.current = true;
-          setMessageVisible(true);
+          setActiveMessage('heart');
           setHeartsVisible(true);
         } else {
           setHeartsVisible((prev) => !prev);
@@ -78,6 +78,7 @@ const Home = () => {
 
     const onTouchStart = (e) => {
       e.preventDefault();
+      touchOriginRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       setHoldingHeart(true);
       start();
     };
@@ -92,7 +93,14 @@ const Home = () => {
     heart.addEventListener('touchend', cancel);
     heart.addEventListener('mouseup', cancel);
     heart.addEventListener('mouseleave', cancel);
-    heart.addEventListener('touchmove', cancel);
+    const onTouchMove = (e) => {
+      if (!touchOriginRef.current) return;
+      const dx = e.touches[0].clientX - touchOriginRef.current.x;
+      const dy = e.touches[0].clientY - touchOriginRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 12) cancel();
+    };
+
+    heart.addEventListener('touchmove', onTouchMove);
     heart.addEventListener('contextmenu', (e) => e.preventDefault());
 
     return () => {
@@ -102,7 +110,7 @@ const Home = () => {
       heart.removeEventListener('touchend', cancel);
       heart.removeEventListener('mouseup', cancel);
       heart.removeEventListener('mouseleave', cancel);
-      heart.removeEventListener('touchmove', cancel);
+      heart.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
 
@@ -120,7 +128,7 @@ const Home = () => {
       if (accel && accel.x != null) {
         if (Math.abs(accel.x) + Math.abs(accel.y) + Math.abs(accel.z) > 12) {
           lastTriggered = now;
-          setShakeTriggered(true);
+          setActiveMessage('shake');
           confetti();
         }
         return;
@@ -132,7 +140,7 @@ const Home = () => {
         const delta = Math.abs(raw.x - lastX) + Math.abs(raw.y - lastY) + Math.abs(raw.z - lastZ);
         if (delta > 15) {
           lastTriggered = now;
-          setShakeTriggered(true);
+          setActiveMessage('shake');
           confetti();
         }
       }
@@ -153,7 +161,7 @@ const Home = () => {
         <Link to="/compliments"><button>Compliment Machine</button></Link>
       </div>
 
-      <div style={{ position: 'relative', display: 'inline-block', marginTop: '28px' }}>
+      <div className="heart-area-wrap" style={{ position: 'relative', display: 'inline-block' }}>
         <div ref={heartRef} className={`heart-outer${holdingHeart ? ' heart-pulsing' : ''}`}>
           <div className="heart-wrap">
             <img
@@ -224,11 +232,11 @@ const Home = () => {
       )}
 
       <div className="heart-message-area">
-        {messageVisible && (
-          <p className="heart-message">✨ You held my heart long enough… <br className="mobile-break" />just like real life 💜</p>
+        {activeMessage === 'heart' && (
+          <p key="heart" className="heart-message">You held my heart long enough… <br className="mobile-break" />just like real life ♥</p>
         )}
-        {shakeTriggered && (
-          <p className="heart-message">📱 You shook things up… just like you shook up my world 🌎💘</p>
+        {activeMessage === 'shake' && (
+          <p key="shake" className="heart-message">You shook things up… <br className="mobile-break" />just like you shook up my world ♥</p>
         )}
       </div>
 

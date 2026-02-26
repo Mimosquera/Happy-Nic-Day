@@ -31,6 +31,7 @@ body {
   padding: 32px 24px 24px;
   gap: 10px;
   height: calc(100vh - 40px);
+  height: calc(100svh - 40px); /* iOS Safari: svh excludes browser chrome */
   overflow: hidden;
 }
 
@@ -100,6 +101,16 @@ img {
 .heart-outer {
   width: min(220px, 60vw);
   height: min(220px, 60vw);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.heart-area-wrap {
+  margin-top: 28px;
 }
 
 /* ─── Buttons ────────────────────────────────── */
@@ -330,7 +341,7 @@ button:disabled {
   font-size: clamp(1.1rem, 4.5vw, 1.6rem);
   font-weight: 700;
   color: #5a0080;
-  animation: fadeIn 1s ease-in-out;
+  animation: fadeInUp 0.4s ease-out both;
   margin: 6px 0;
 }
 
@@ -446,8 +457,44 @@ button:disabled {
 
   .home-container,
   .page {
-    padding: 20px 10px 16px;
-    gap: 8px;
+    padding: 16px 10px 10px;
+    gap: 4px;
+    /* Correct height for mobile: body has 12px padding × 2 = 24px */
+    height: calc(100vh - 24px);
+    height: calc(100svh - 24px);
+  }
+
+  /* Tighten h1 gap on home page so content fits */
+  .home-container h1 {
+    margin-bottom: 8px;
+  }
+
+  /* Scale heart down so bottom elements stay visible */
+  .heart-wrap,
+  .heart-outer {
+    width: min(160px, 46vw);
+    height: min(160px, 46vw);
+  }
+
+  /* Compress balloon area — no fixed tall reserve needed on small screens */
+  .balloon-slot {
+    min-height: 50px;
+  }
+
+  .balloon-wrap {
+    margin-top: 4px;
+  }
+
+  /* Let message area size naturally and push it lower */
+  .heart-message-area {
+    min-height: 0;
+    margin-top: 16px;
+  }
+
+  /* Tighten footer spacing */
+  .year-footer {
+    padding-top: 4px;
+    padding-bottom: 0;
   }
 
   button {
@@ -461,14 +508,33 @@ button:disabled {
   }
 
   .nav-buttons button {
-    width: 95%;
+    width: 100%;
     max-width: 450px;
     white-space: nowrap;
     font-size: 1rem;
-    padding: 12px 20px;
+    padding: 10px 16px;
   }
 
   .mobile-break {
     display: block;
+  }
+
+  /* Home page only: push elements below header down, add breathing room */
+  .home-container {
+    gap: 10px;
+  }
+
+  .home-container .nav-buttons {
+    margin-top: 16px;
+  }
+
+  /* Push heart and everything below it further down on mobile */
+  .heart-area-wrap {
+    margin-top: 20px;
+  }
+
+  /* Push balloon and everything below it further down on mobile */
+  .balloon-slot {
+    margin-top: 48px;
   }
 }
