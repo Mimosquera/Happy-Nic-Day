@@ -64,14 +64,14 @@ const WouldYouStillDate = () => {
 
   return (
     <div className="page">
-      <h2 key={fadeKey} className="fade-in">{shuffledQuestions[index]}</h2>
+      <h1>Answer wisely…</h1>
       <img
         src="/heart-key.png"
         alt="heart with key"
         className="page-img"
       />
       <button className="btn-sm" onClick={nextQuestion}>Next Question 💭</button>
-      <p style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', fontWeight: 700, color: '#5a0080' }}>Answer wisely…</p>
+      <p key={fadeKey} className="fade-in question-text">{shuffledQuestions[index]}</p>
       <BackButton />
       <footer className="year-footer">2025</footer>
     </div>
