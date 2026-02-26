@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import '../index.css';
 import confetti from 'canvas-confetti';
@@ -8,7 +8,19 @@ const Home = () => {
   const [longPressTriggered, setLongPressTriggered] = useState(false);
   const [shakeTriggered, setShakeTriggered] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
+  const heartRef = useRef(null);
 
+  // Stable random heart data — computed once so positions don't jump on re-render
+  const heartData = useMemo(() =>
+    Array.from({ length: 10 }, (_, i) => ({
+      left: Math.random() * 100,
+      size: Math.random() * 1.5 + 1,
+      delay: Math.random() * 5,
+      duration: Math.random() * 5 + 8,
+      emoji: i % 2 === 0 ? '💜' : '🤍',
+    })),
+    []
+  );
 
   // 🎉 Confetti on page load
   useEffect(() => {
@@ -19,107 +31,79 @@ const Home = () => {
     });
   }, []);
 
-  // ✅ Enable motion on iOS
-  const enableMotionAccess = async () => {
-    if (
-      typeof DeviceMotionEvent !== 'undefined' &&
-      typeof DeviceMotionEvent.requestPermission === 'function'
-    ) {
-      try {
-        const response = await DeviceMotionEvent.requestPermission();
-        if (response === 'granted') {
-          setMotionAllowed(true);
-        } else {
-          alert('Motion access denied 😢');
-        }
-      } catch (err) {
-        console.error('Motion permission error:', err);
-      }
-    } else {
-      setMotionAllowed(true);
-    }
-  };
-
-  // 🤲 Long Press on the heart image
+  // 🤲 Long press + iOS motion permission on heart touch
   useEffect(() => {
+    const heart = heartRef.current;
+    if (!heart) return;
+
     let timer;
-    const heart = document.getElementById('heart');
-  
+
     const start = () => {
       timer = setTimeout(() => {
         setLongPressTriggered(true);
       }, 1000);
     };
-  
+
     const cancel = () => {
       setHoldingHeart(false);
       clearTimeout(timer);
     };
-  
+
     const handleTouchStart = async (e) => {
       e.preventDefault();
       setHoldingHeart(true);
-    
-      // Request motion permission if not already granted
+
       if (
-        !motionAllowed &&
         typeof DeviceMotionEvent !== 'undefined' &&
         typeof DeviceMotionEvent.requestPermission === 'function'
       ) {
         try {
           const result = await DeviceMotionEvent.requestPermission();
-          if (result === 'granted') {
-            setMotionAllowed(true);
-          }
+          if (result === 'granted') setMotionAllowed(true);
         } catch (err) {
-          console.warn('Motion permission denied or failed:', err);
+          console.warn('Motion permission denied:', err);
         }
       } else {
         setMotionAllowed(true);
       }
-    
+
       start();
     };
-    
-  
+
     const handleMouseDown = () => {
       setHoldingHeart(true);
       start();
     };
-    const handleTouchEnd = cancel;
-    const handleMouseUp = cancel;
-    const handleLeave = cancel;
-    const handleTouchMove = cancel;
-    const handleContextMenu = (e) => e.preventDefault();
-  
-    if (heart) {
-      heart.addEventListener('touchstart', handleTouchStart, { passive: false });
-      heart.addEventListener('mousedown', handleMouseDown);
-      heart.addEventListener('touchend', handleTouchEnd);
-      heart.addEventListener('mouseup', handleMouseUp);
-      heart.addEventListener('mouseleave', handleLeave);
-      heart.addEventListener('touchmove', handleTouchMove);
-      heart.addEventListener('contextmenu', handleContextMenu);
-    }
-  
-    return () => {
-      heart?.removeEventListener('touchstart', handleTouchStart);
-      heart?.removeEventListener('mousedown', handleMouseDown);
-      heart?.removeEventListener('touchend', handleTouchEnd);
-      heart?.removeEventListener('mouseup', handleMouseUp);
-      heart?.removeEventListener('mouseleave', handleLeave);
-      heart?.removeEventListener('touchmove', handleTouchMove);
-      heart?.removeEventListener('contextmenu', handleContextMenu);
-    };
-  }, []);    
 
-  // 📳 Shake Detection
+    const handleContextMenu = (e) => e.preventDefault();
+
+    heart.addEventListener('touchstart', handleTouchStart, { passive: false });
+    heart.addEventListener('mousedown', handleMouseDown);
+    heart.addEventListener('touchend', cancel);
+    heart.addEventListener('mouseup', cancel);
+    heart.addEventListener('mouseleave', cancel);
+    heart.addEventListener('touchmove', cancel);
+    heart.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      clearTimeout(timer);
+      heart.removeEventListener('touchstart', handleTouchStart);
+      heart.removeEventListener('mousedown', handleMouseDown);
+      heart.removeEventListener('touchend', cancel);
+      heart.removeEventListener('mouseup', cancel);
+      heart.removeEventListener('mouseleave', cancel);
+      heart.removeEventListener('touchmove', cancel);
+      heart.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, []);
+
+  // 📳 Shake detection
   useEffect(() => {
     if (!motionAllowed) return;
 
-    let lastTime = new Date();
+    let lastTime = Date.now();
     let lastX = null, lastY = null, lastZ = null;
-    const threshold = 20;
+    const THRESHOLD = 20;
 
     const handleMotion = (event) => {
       const current = event.accelerationIncludingGravity;
@@ -127,14 +111,14 @@ const Home = () => {
 
       const { x, y, z } = current;
 
-      if (lastX !== null && lastY !== null && lastZ !== null) {
-        const deltaX = Math.abs(x - lastX);
-        const deltaY = Math.abs(y - lastY);
-        const deltaZ = Math.abs(z - lastZ);
-        const total = deltaX + deltaY + deltaZ;
+      if (lastX !== null) {
+        const total =
+          Math.abs(x - lastX) +
+          Math.abs(y - lastY) +
+          Math.abs(z - lastZ);
 
-        const now = new Date();
-        if (total > threshold && now - lastTime > 1000) {
+        const now = Date.now();
+        if (total > THRESHOLD && now - lastTime > 1000) {
           lastTime = now;
           setShakeTriggered(true);
           confetti();
@@ -154,21 +138,19 @@ const Home = () => {
     <div className="home-container">
       <h1>Happy Birthday! 💜</h1>
 
-      <Link to="/cake"><button>Blow Out the Cake</button></Link>
-      <Link to="/would-you-still-date"><button>Would You Still Date Me If…</button></Link>
-      <Link to="/compliments"><button>Compliment Machine</button></Link>
+      <div className="nav-buttons">
+        <Link to="/cake"><button>Blow Out the Cake</button></Link>
+        <Link to="/would-you-still-date"><button>Would You Still Date Me If…</button></Link>
+        <Link to="/compliments"><button>Compliment Machine</button></Link>
+      </div>
 
-      <div style={{ position: 'relative', display: 'inline-block', marginTop: '1.5rem' }}>
+      <div style={{ position: 'relative', display: 'inline-block', marginTop: '12px' }}>
         <img
-          id="heart"
+          ref={heartRef}
           src="/purple-heart-pulse.gif"
-          alt="purple-heart-pulse"
-          width={250}
-          height={250}
-          style={{
-            borderRadius: '50%',
-            animation: holdingHeart ? 'pulse 1s infinite' : 'none',
-          }}
+          alt="pulsing purple heart"
+          className="heart-img"
+          style={{ animation: holdingHeart ? 'pulse 1s infinite' : 'none' }}
         />
         {holdingHeart && (
           <div
@@ -176,8 +158,8 @@ const Home = () => {
               position: 'absolute',
               top: '50%',
               left: '50%',
-              width: '260px',
-              height: '260px',
+              width: '110%',
+              height: '110%',
               borderRadius: '50%',
               transform: 'translate(-50%, -50%)',
               border: '3px dashed #d3b3ff',
@@ -188,40 +170,29 @@ const Home = () => {
         )}
       </div>
 
-
-
-      {/* Floating hearts triggered ONLY by long press */}
       {longPressTriggered && (
-  <div className="floating-hearts">
-    {Array.from({ length: 10 }).map((_, i) => {
-      const left = Math.random() * 100; // percent
-      const size = Math.random() * 1.5 + 1; // 1x to 2.5x
-      const delay = Math.random() * 5; // seconds
-      const duration = Math.random() * 5 + 8; // 8 to 13s
-      const emoji = i % 2 === 0 ? '💜' : '🤍';
-
-      return (
-        <span
-          key={i}
-          className="heart"
-          style={{
-            left: `${left}%`,
-            fontSize: `${size}rem`,
-            animationDelay: `${delay}s`,
-            animationDuration: `${duration}s`,
-          }}
-        >
-          {emoji}
-        </span>
-      );
-    })}
-  </div>
-)}
+        <div className="floating-hearts">
+          {heartData.map((h, i) => (
+            <span
+              key={i}
+              className="heart"
+              style={{
+                left: `${h.left}%`,
+                fontSize: `${h.size}rem`,
+                animationDelay: `${h.delay}s`,
+                animationDuration: `${h.duration}s`,
+              }}
+            >
+              {h.emoji}
+            </span>
+          ))}
+        </div>
+      )}
 
       {(longPressTriggered || shakeTriggered) && (
-        <div style={{ marginTop: '2rem', fontSize: '1.4rem', animation: 'fadeIn 1s ease-in-out' }}>
+        <div className="message-box">
           {longPressTriggered && (
-            <p>✨ You held my heart long enough... just like real life 💜</p>
+            <p>✨ You held my heart long enough… just like real life 💜</p>
           )}
           {shakeTriggered && (
             <p>📱 You shook things up… just like you shook up my world 🌎💘</p>

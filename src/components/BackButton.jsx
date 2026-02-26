@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 const BackButton = () => {
   return (
-    <div style={{ marginTop: '20px' }}>
+    <div className="back-button-wrap">
       <Link to="/">
-        <button style={{ padding: '10px 20px', fontSize: '1rem' }}>← Back to Home</button>
+        <button>← Back to Home</button>
       </Link>
     </div>
   );

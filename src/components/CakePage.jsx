@@ -93,8 +93,7 @@ const CakePage = () => {
       <img
         src="/cake.png"
         alt="birthday cake"
-        className={candlesOut ? 'blow-out' : ''}
-        style={{ width: '300px', transition: 'filter 0.4s ease' }}
+        className={`cake-img${candlesOut ? ' blow-out' : ''}`}
       />
 
       {!candlesOut ? (

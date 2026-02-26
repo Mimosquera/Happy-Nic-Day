@@ -33,7 +33,7 @@ const questions = [
   "Would you still date me if I cried during cute dog videos every day?",
   "Would you still date me if I introduced myself as 'your problem' to strangers?",
   "Would you still date me if I were a turtle?",
-  "Would you still date me if I were a tortoise",
+  "Would you still date me if I were a tortoise?",
 ];
 
 
@@ -73,8 +73,8 @@ const WouldYouStillDate = () => {
       <h2 key={fadeKey} className="fade-in">{shuffledQuestions[index]}</h2>
       <img
         src="/heart-key.png"
-        alt="heart-key"
-        style={{ width: '300px' }}
+        alt="heart with key"
+        className="page-img"
       />
       <button onClick={nextQuestion}>Next Question 💭</button>
       <p>Answer wisely…</p>

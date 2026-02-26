@@ -67,12 +67,12 @@ const ComplimentMachine = () => {
       <h2>Daily Compliment Machine</h2>
       <img
         src="/smiling-speech-bubble.png"
-        alt="smiling-speech-bubble"
-        style={{ width: '300px' }}
+        alt="smiling speech bubble"
+        className="page-img"
       />
       <button onClick={giveCompliment}>Give Me Compliment 💌</button>
       {index >= 0 && (
-        <p key={fadeKey} className="fade-in" style={{ maxWidth: '80%', margin: '20px auto' }}>
+        <p key={fadeKey} className="fade-in message-box">
           {shuffled[index]}
         </p>
       )}
