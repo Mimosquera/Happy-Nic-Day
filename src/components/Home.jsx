@@ -8,16 +8,47 @@ const needsMotionPermission =
   typeof DeviceMotionEvent.requestPermission === 'function';
 
 const Home = () => {
-  const [shakeEnabled, setShakeEnabled] = useState(false);
+  const [shakeEnabled, setShakeEnabled] = useState(() => {
+    // On iOS, if permission was previously granted, auto-enable so no re-prompt is needed
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+      return localStorage.getItem('motionPermission') === 'granted';
+    }
+    return false;
+  });
   const [activeMessage, setActiveMessage] = useState(null); // 'heart' | 'shake'
   const [heartsVisible, setHeartsVisible] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
   const [ringVisible, setRingVisible] = useState(false);
   const [popping, setPopping] = useState(false);
   const [balloonPopped, setBalloonPopped] = useState(false);
+  const [balloonTop, setBalloonTop] = useState(() => window.innerHeight + 80);
+  const [risenBalloonPopping, setRisenBalloonPopping] = useState(false);
+  const [balloonKey, setBalloonKey] = useState(0);
+  const [balloonTransition, setBalloonTransition] = useState(true);
   const heartRef = useRef(null);
-  const messageVisibleRef = useRef(false);
+  const activeMessageRef = useRef(null);
   const touchOriginRef = useRef(null);
+  const heartMessageAreaRef = useRef(null);
+  const shakeReadyRef = useRef(false);
+  const targetTopRef = useRef(null);
+  const cleanupRef = useRef(null);
+
+  // Keep ref in sync so event-handler closures always see the latest value
+  useEffect(() => { activeMessageRef.current = activeMessage; }, [activeMessage]);
+
+  // After balloon-slot collapses (1.5s), measure heart-message-area and slide balloon up to it
+  useEffect(() => {
+    if (!balloonPopped) return;
+    const id = setTimeout(() => {
+      if (!heartMessageAreaRef.current) return;
+      const rect = heartMessageAreaRef.current.getBoundingClientRect();
+      const target = rect.bottom + 80;
+      targetTopRef.current = target;
+      setBalloonTop(target);
+    }, 1600);
+    return () => clearTimeout(id);
+  }, [balloonPopped]);
 
   const heartData = useMemo(() =>
     Array.from({ length: 10 }, (_, i) => ({
@@ -25,7 +56,8 @@ const Home = () => {
       size: Math.random() * 1.5 + 1,
       delay: Math.random() * 5,
       duration: Math.random() * 5 + 8,
-      emoji: i % 2 === 0 ? '💜' : '🤍',
+      emoji: i % 2 === 0 ? '\u2665\uFE0E' : '\u2661',
+      color: i % 2 === 0 ? '#8b00b6' : '#a040c8',
     })),
     []
   );
@@ -34,12 +66,51 @@ const Home = () => {
     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
   }, []);
 
+  const handleRisenBalloonClick = () => {
+    if (risenBalloonPopping) return;
+    if (activeMessageRef.current === 'heart') shakeReadyRef.current = true;
+    setRisenBalloonPopping(true);
+  };
+
+  // After risen balloon pops, reset it off-screen then float it back up
+  useEffect(() => {
+    if (!risenBalloonPopping) return;
+    // Wait for pop animation to finish (~500ms), then snap off-screen
+    const popTimer = setTimeout(() => {
+      setRisenBalloonPopping(false);
+      setBalloonTransition(false); // disable transition for instant snap
+      setBalloonTop(window.innerHeight + 80);
+      setBalloonKey((k) => k + 1);
+    }, 500);
+    return () => clearTimeout(popTimer);
+  }, [risenBalloonPopping]);
+
+  // When balloonKey changes (new balloon spawned off-screen), float it up after a frame
+  useEffect(() => {
+    if (balloonKey === 0 || targetTopRef.current == null) return;
+    // Give the browser a frame to paint the off-screen position with no transition
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        setBalloonTransition(true); // re-enable transition
+        setBalloonTop(targetTopRef.current);
+      });
+      cleanupRef.current = raf2;
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (cleanupRef.current) cancelAnimationFrame(cleanupRef.current);
+    };
+  }, [balloonKey]);
+
   const handleBalloonClick = async () => {
     // Request permission immediately (must be in user-gesture context for iOS)
     if (needsMotionPermission) {
       try {
         const result = await DeviceMotionEvent.requestPermission();
-        if (result === 'granted') setShakeEnabled(true);
+        if (result === 'granted') {
+          localStorage.setItem('motionPermission', 'granted');
+          setShakeEnabled(true);
+        }
       } catch {
         // permission denied or unavailable
       }
@@ -57,12 +128,13 @@ const Home = () => {
 
     const start = () => {
       timer = setTimeout(() => {
-        if (!messageVisibleRef.current) {
-          messageVisibleRef.current = true;
+        if (activeMessageRef.current === 'heart') {
+          // Heart message already showing — toggle the floating hearts
+          setHeartsVisible((prev) => !prev);
+        } else {
+          // First trigger, or swapping from shake message
           setActiveMessage('heart');
           setHeartsVisible(true);
-        } else {
-          setHeartsVisible((prev) => !prev);
         }
         setHoldingHeart(false);
         setRingVisible(true);
@@ -122,12 +194,13 @@ const Home = () => {
 
     const onMotion = (e) => {
       const now = Date.now();
-      if (now - lastTriggered < 1000) return;
+      if (!shakeReadyRef.current && now - lastTriggered < 1000) return;
 
       const accel = e.acceleration;
       if (accel && accel.x != null) {
         if (Math.abs(accel.x) + Math.abs(accel.y) + Math.abs(accel.z) > 12) {
           lastTriggered = now;
+          shakeReadyRef.current = false;
           setActiveMessage('shake');
           confetti();
         }
@@ -140,6 +213,7 @@ const Home = () => {
         const delta = Math.abs(raw.x - lastX) + Math.abs(raw.y - lastY) + Math.abs(raw.z - lastZ);
         if (delta > 15) {
           lastTriggered = now;
+          shakeReadyRef.current = false;
           setActiveMessage('shake');
           confetti();
         }
@@ -153,7 +227,7 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <h1>Happy Birthday! 💜</h1>
+      <h1>Happy Birthday! ♥︎</h1>
 
       <div className="nav-buttons">
         <Link to="/cake"><button>Blow Out the Cake</button></Link>
@@ -189,7 +263,7 @@ const Home = () => {
         )}
       </div>
 
-      <div className="balloon-slot">
+      <div className={`balloon-slot${balloonPopped ? ' balloon-slot-popped' : ''}`}>
         {!balloonPopped && (
           <span className="balloon-wrap">
             <button
@@ -223,6 +297,7 @@ const Home = () => {
                 fontSize: `${h.size}rem`,
                 animationDelay: `${h.delay}s`,
                 animationDuration: `${h.duration}s`,
+                color: h.color,
               }}
             >
               {h.emoji}
@@ -231,14 +306,33 @@ const Home = () => {
         </div>
       )}
 
-      <div className="heart-message-area">
+      <div className="heart-message-area" ref={heartMessageAreaRef}>
         {activeMessage === 'heart' && (
-          <p key="heart" className="heart-message">You held my heart long enough… <br className="mobile-break" />just like real life ♥</p>
+          <p key="heart" className="heart-message">You held my heart long enough… <br className="mobile-break" />just like real life ♥︎</p>
         )}
         {activeMessage === 'shake' && (
-          <p key="shake" className="heart-message">You shook things up… <br className="mobile-break" />just like you shook up my world ♥</p>
+          <p key="shake" className="heart-message">You shook things up… <br className="mobile-break" />just like you shook up my world ♥︎</p>
         )}
       </div>
+
+      {balloonPopped && (
+        <div
+          className="balloon-rising-fixed"
+          style={{
+            top: `${balloonTop}px`,
+            transition: balloonTransition ? 'top 6s ease-out' : 'none',
+          }}
+          aria-hidden="true"
+        >
+          <span key={balloonKey} className="balloon-wrap-fixed" onClick={handleRisenBalloonClick}>
+            <span
+              className={`balloon-emoji-fixed${risenBalloonPopping ? ' balloon-emoji-fixed-pop' : ''}`}
+            >
+              🎈
+            </span>
+          </span>
+        </div>
+      )}
 
       <footer className="year-footer">
         2025

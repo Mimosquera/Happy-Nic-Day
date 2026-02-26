@@ -128,13 +128,21 @@ button {
   border-radius: 14px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(139, 0, 182, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.2s ease;
   max-width: 100%;
   -webkit-tap-highlight-color: transparent;
   outline: none;
 }
 
-button:hover {
+@media (hover: hover) {
+  button:hover {
+    background: linear-gradient(135deg, #c37bff, #aa5dc1);
+    transform: scale(1.05);
+    box-shadow: 0 6px 14px rgba(139, 0, 182, 0.4);
+  }
+}
+
+button.touch-hover {
   background: linear-gradient(135deg, #c37bff, #aa5dc1);
   transform: scale(1.05);
   box-shadow: 0 6px 14px rgba(139, 0, 182, 0.4);
@@ -145,15 +153,9 @@ button:active {
   box-shadow: 0 2px 6px rgba(139, 0, 182, 0.25);
 }
 
-/* Remove lingering highlight after tap/click; keep ring for keyboard nav */
+/* Remove focus ring; tap flash handled by -webkit-tap-highlight-color */
 button:focus {
   outline: none;
-}
-
-button:focus:not(:focus-visible) {
-  background: linear-gradient(135deg, #b15eff, #8b00b6);
-  box-shadow: 0 4px 10px rgba(139, 0, 182, 0.3);
-  transform: none;
 }
 
 button:disabled {
@@ -197,6 +199,12 @@ button:disabled {
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  transition: min-height 1.5s ease, margin-top 1.5s ease;
+}
+
+.balloon-slot.balloon-slot-popped {
+  min-height: 0;
+  margin-top: 0;
 }
 
 .balloon-wrap {
@@ -275,6 +283,40 @@ button:disabled {
   100% { transform: scale(0)    translateY(0);   opacity: 0; }
 }
 
+/* ─── Risen balloon (floats up after pop) ────── */
+
+.balloon-rising-fixed {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 5;
+  pointer-events: none;
+  /* transition controlled inline via balloonTransition state */
+}
+
+.balloon-wrap-fixed {
+  display: inline-block;
+  pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: balloonX 3.7s ease-in-out 7.8s infinite;
+}
+
+.balloon-emoji-fixed {
+  display: inline-block;
+  font-size: 4.5rem;
+  line-height: 1;
+  filter: hue-rotate(270deg) saturate(1.4);
+  animation: balloonY 2.9s ease-in-out 7.8s infinite;
+}
+
+.balloon-emoji-fixed-pop {
+  animation: balloonPop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
 /* ─── Ghost / Secondary Button ──────────────── */
 
 .btn-ghost {
@@ -284,7 +326,17 @@ button:disabled {
   box-shadow: none;
 }
 
-.btn-ghost:hover {
+@media (hover: hover) {
+  .btn-ghost:hover {
+    background: rgba(139, 0, 182, 0.08);
+    color: #8b00b6;
+    border-color: #8b00b6;
+    box-shadow: 0 4px 10px rgba(139, 0, 182, 0.15);
+    transform: scale(1.04);
+  }
+}
+
+.btn-ghost.touch-hover {
   background: rgba(139, 0, 182, 0.08);
   color: #8b00b6;
   border-color: #8b00b6;
@@ -315,7 +367,16 @@ button:disabled {
   box-shadow: 0 3px 8px rgba(139, 0, 182, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.btn-home:hover {
+@media (hover: hover) {
+  .btn-home:hover {
+    background: rgba(139, 0, 182, 0.1);
+    color: #8b00b6;
+    box-shadow: 0 5px 14px rgba(139, 0, 182, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+}
+
+.btn-home.touch-hover {
   background: rgba(139, 0, 182, 0.1);
   color: #8b00b6;
   box-shadow: 0 5px 14px rgba(139, 0, 182, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -471,6 +532,7 @@ button:disabled {
   }
 }
 
+
 @keyframes fadeInUp {
   0% {
     opacity: 0;
@@ -585,4 +647,5 @@ button:disabled {
   .balloon-slot {
     margin-top: 48px;
   }
+
 }
