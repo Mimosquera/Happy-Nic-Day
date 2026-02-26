@@ -14,6 +14,7 @@ const Home = () => {
   const [shakeTriggered, setShakeTriggered] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
   const [popping, setPopping] = useState(false);
+  const [balloonPopped, setBalloonPopped] = useState(false);
   const heartRef = useRef(null);
   const messageVisibleRef = useRef(false);
 
@@ -33,6 +34,7 @@ const Home = () => {
   }, []);
 
   const handleBalloonClick = async () => {
+    // Request permission immediately (must be in user-gesture context for iOS)
     if (needsMotionPermission) {
       try {
         const result = await DeviceMotionEvent.requestPermission();
@@ -43,6 +45,7 @@ const Home = () => {
     } else {
       setShakeEnabled(true);
     }
+    setPopping(true);
   };
 
   useEffect(() => {
@@ -174,19 +177,18 @@ const Home = () => {
       </div>
 
       <div className="balloon-slot">
-        {!shakeEnabled && (
+        {!balloonPopped && (
           <span className="balloon-wrap">
             <button
               className="balloon-btn"
-              onClick={() => setPopping(true)}
+              onClick={handleBalloonClick}
               aria-label="Enable shake"
             >
               <span
                 className={popping ? 'balloon-emoji balloon-emoji-pop' : 'balloon-emoji'}
                 onAnimationEnd={(e) => {
                   if (e.animationName === 'balloonPop') {
-                    setPopping(false);
-                    handleBalloonClick();
+                    setBalloonPopped(true);
                   }
                 }}
               >
