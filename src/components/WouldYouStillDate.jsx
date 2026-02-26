@@ -70,8 +70,8 @@ const WouldYouStillDate = () => {
         alt="heart with key"
         className="page-img"
       />
-      <button onClick={nextQuestion}>Next Question 💭</button>
-      <p>Answer wisely…</p>
+      <button className="btn-sm" onClick={nextQuestion}>Next Question 💭</button>
+      <p style={{ fontSize: 'clamp(1.3rem, 5vw, 1.8rem)', fontWeight: 700, color: '#5a0080' }}>Answer wisely…</p>
       <BackButton />
       <footer className="year-footer">2025</footer>
     </div>

@@ -5,7 +5,7 @@ const BackButton = () => {
   return (
     <div className="back-button-wrap">
       <Link to="/">
-        <button>← Back to Home</button>
+        <button className="btn-home">← Back</button>
       </Link>
     </div>
   );

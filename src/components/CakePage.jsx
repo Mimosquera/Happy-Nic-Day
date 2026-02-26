@@ -93,7 +93,7 @@ const CakePage = () => {
 
   return (
     <div className="page">
-      <h2>Make a wish!</h2>
+      <h1 style={{ fontSize: 'clamp(2.5rem, 10vw, 4rem)' }}>Make a wish!</h1>
       <img
         src="/cake.png"
         alt="birthday cake"
@@ -101,13 +101,13 @@ const CakePage = () => {
       />
 
       {!candlesOut ? (
-        <button onClick={startListening} disabled={listening}>
+        <button className="btn-sm" onClick={startListening} disabled={listening}>
           {listening ? 'Listening...' : 'Blow Candles! 💨'}
         </button>
       ) : (
         <>
-          <p>Your wish better be about me.</p>
-          <button onClick={resetCake}>New Cake 🎂</button>
+          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2.2rem)', fontWeight: 700, color: '#5a0080' }}>Your wish better be about me ;)</p>
+          <button className="btn-sm" onClick={resetCake}>New Cake 🎂</button>
         </>
       )}
 
