@@ -31,6 +31,16 @@ const Home = () => {
     });
   }, []);
 
+  // 📳 Enable motion immediately on non-iOS (no permission needed)
+  useEffect(() => {
+    if (
+      typeof DeviceMotionEvent === 'undefined' ||
+      typeof DeviceMotionEvent.requestPermission !== 'function'
+    ) {
+      setMotionAllowed(true);
+    }
+  }, []);
+
   // 🤲 Long press + iOS motion permission on heart touch
   useEffect(() => {
     const heart = heartRef.current;
@@ -103,7 +113,7 @@ const Home = () => {
 
     let lastTime = Date.now();
     let lastX = null, lastY = null, lastZ = null;
-    const THRESHOLD = 20;
+    const THRESHOLD = 15;
 
     const handleMotion = (event) => {
       const current = event.accelerationIncludingGravity;

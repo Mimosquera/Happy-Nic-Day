@@ -19,6 +19,8 @@ const CakePage = () => {
   }, []);
 
   const startListening = async () => {
+    if (listening) return; // prevent double-fire before state updates
+    setListening(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
@@ -36,12 +38,12 @@ const CakePage = () => {
 
       source.connect(analyser);
 
-      setListening(true);
       console.log('🎤 Started listening');
 
       detectWish();
     } catch (error) {
       console.error('🚫 Mic error:', error);
+      setListening(false); // re-enable button if permission denied
     }
   };
 
@@ -84,6 +86,8 @@ const CakePage = () => {
 
   const resetCake = () => {
     stopListening();
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
     setCandlesOut(false);
   };
 

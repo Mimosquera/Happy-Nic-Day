@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import BackButton from './BackButton';
 
 const questions = [
@@ -47,22 +47,16 @@ function shuffleArray(array) {
 }
 
 const WouldYouStillDate = () => {
-  const [shuffledQuestions, setShuffledQuestions] = useState([]);
+  // Lazy initialiser — shuffled immediately so first render always has a question
+  const [shuffledQuestions, setShuffledQuestions] = useState(() => shuffleArray(questions));
   const [index, setIndex] = useState(0);
-  const [fadeKey, setFadeKey] = useState(0); // ✅ This should be inside the component
-
-  useEffect(() => {
-    const shuffled = shuffleArray(questions);
-    setShuffledQuestions(shuffled);
-    setIndex(0);
-  }, []);
+  const [fadeKey, setFadeKey] = useState(0);
 
   const nextQuestion = () => {
     if (index < shuffledQuestions.length - 1) {
       setIndex(index + 1);
     } else {
-      const reshuffled = shuffleArray(questions);
-      setShuffledQuestions(reshuffled);
+      setShuffledQuestions(shuffleArray(questions));
       setIndex(0);
     }
     setFadeKey(prev => prev + 1);
