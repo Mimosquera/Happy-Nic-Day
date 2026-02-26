@@ -77,6 +77,7 @@ const ComplimentMachine = () => {
         </p>
       )}
       <BackButton />
+      <footer className="year-footer">2025</footer>
     </div>
   );
 };

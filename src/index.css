@@ -1,3 +1,8 @@
+html {
+  background-color: #dacefc;
+  overscroll-behavior: none;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -9,6 +14,7 @@ body {
   padding: 20px;
   min-height: 100vh;
   margin: 0;
+  overscroll-behavior: none;
 }
 
 /* ─── Containers ─────────────────────────────── */
@@ -18,10 +24,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 600px;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 32px 16px 24px;
+  padding: 32px 24px 24px;
   gap: 10px;
+  min-height: calc(100vh - 40px);
 }
 
 /* ─── Typography ─────────────────────────────── */
@@ -75,10 +82,21 @@ img {
 }
 
 .heart-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heart-wrap {
   border-radius: 50%;
+  overflow: hidden;
   width: min(220px, 60vw);
   height: min(220px, 60vw);
-  object-fit: cover;
+}
+
+.heart-outer {
+  width: min(220px, 60vw);
+  height: min(220px, 60vw);
 }
 
 /* ─── Buttons ────────────────────────────────── */
@@ -136,10 +154,109 @@ button:disabled {
   font-size: clamp(0.8rem, 2vw, 0.95rem);
 }
 
+/* ─── Balloon shake button ───────────────────── */
+
+/* Outer wrapper drifts left/right on its own cycle */
+.balloon-slot {
+  min-height: 160px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.balloon-wrap {
+  display: inline-block;
+  margin-top: 72px;
+  animation: balloonX 3.7s ease-in-out infinite;
+}
+
+/* Inner button drifts up/down + sways on a different cycle */
+.balloon-btn {
+  display: block;
+  font-size: 4.5rem;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  animation: balloonY 2.9s ease-in-out infinite;
+}
+
+.balloon-btn:hover {
+  background: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.balloon-btn:active {
+  background: none;
+  box-shadow: none;
+}
+
+.balloon-btn:focus,
+.balloon-btn:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* The emoji itself — filter + scale live here */
+.balloon-emoji {
+  display: inline-block;
+  filter: hue-rotate(270deg) saturate(1.4);
+  transition: transform 0.15s ease;
+}
+
+.balloon-btn:hover .balloon-emoji {
+  transform: scale(1.15);
+}
+
+.balloon-btn:active .balloon-emoji {
+  transform: scale(0.95);
+}
+
+/* Pop animation — runs on the emoji span only, no box visible */
+.balloon-emoji-pop {
+  animation: balloonPop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+  pointer-events: none;
+}
+
+@keyframes balloonX {
+  0%, 100% { transform: translateX(0px); }
+  50%       { transform: translateX(-12px); }
+}
+
+@keyframes balloonY {
+  0%, 100% { transform: translateY(0px)   rotate(0deg); }
+  50%       { transform: translateY(-18px) rotate(-4deg); }
+}
+
+@keyframes balloonPop {
+  0%   { transform: scale(1)    translateY(0);   opacity: 1; }
+  40%  { transform: scale(1.35) translateY(-8px); opacity: 1; }
+  60%  { transform: scale(0.6)  translateY(4px);  opacity: 0.7; }
+  100% { transform: scale(0)    translateY(0);   opacity: 0; }
+}
+
 /* ─── Back Button ────────────────────────────── */
 
 .back-button-wrap {
   margin-top: 20px;
+}
+
+/* ─── Year Footer ────────────────────────────── */
+
+.year-footer {
+  margin-top: auto;
+  padding-top: 32px;
+  padding-bottom: 8px;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
+  font-weight: 700;
+  color: #5a0080;
+  opacity: 0.7;
+  letter-spacing: 0.05em;
 }
 
 /* ─── Cake blow-out ──────────────────────────── */
@@ -169,6 +286,29 @@ button:disabled {
 }
 
 /* ─── Triggered message ──────────────────────── */
+
+.heart-message-area {
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 16px;
+}
+
+.heart-message {
+  font-size: clamp(1.1rem, 4.5vw, 1.6rem);
+  font-weight: 700;
+  color: #5a0080;
+  animation: fadeIn 1s ease-in-out;
+  margin: 6px 0;
+}
+
+.mobile-break {
+  display: none;
+}
 
 .message-box {
   margin-top: 8px;
@@ -211,9 +351,20 @@ button:disabled {
 }
 
 @keyframes pulse {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.06); }
-  100% { transform: scale(1); }
+  0%   { transform: scale3d(1, 1, 1); }
+  7%   { transform: scale3d(1.08, 1.08, 1); }
+  14%  { transform: scale3d(0.99, 0.99, 1); }
+  21%  { transform: scale3d(1.04, 1.04, 1); }
+  28%  { transform: scale3d(1, 1, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+
+.heart-pulsing {
+  animation: pulse 4s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes pulseOutline {
@@ -244,6 +395,20 @@ button:disabled {
 
 /* ─── Responsive ─────────────────────────────── */
 
+@media (min-width: 481px) {
+  .heart-outer {
+    margin-top: 24px;
+  }
+
+  .balloon-slot {
+    margin-top: 16px;
+  }
+
+  .heart-message-area {
+    margin-top: 12px;
+  }
+}
+
 @media (max-width: 480px) {
   body {
     padding: 12px;
@@ -267,9 +432,13 @@ button:disabled {
 
   .nav-buttons button {
     width: 80%;
-    max-width: 300px;
+    max-width: 360px;
     white-space: normal;
     font-size: 1rem;
     padding: 12px 20px;
+  }
+
+  .mobile-break {
+    display: block;
   }
 }

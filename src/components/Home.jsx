@@ -3,14 +3,18 @@ import { Link } from 'react-router-dom';
 import '../index.css';
 import confetti from 'canvas-confetti';
 
+const needsMotionPermission =
+  typeof DeviceMotionEvent !== 'undefined' &&
+  typeof DeviceMotionEvent.requestPermission === 'function';
+
 const Home = () => {
-  const [motionAllowed, setMotionAllowed] = useState(false);
+  const [shakeEnabled, setShakeEnabled] = useState(false);
   const [longPressTriggered, setLongPressTriggered] = useState(false);
   const [shakeTriggered, setShakeTriggered] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
+  const [popping, setPopping] = useState(false);
   const heartRef = useRef(null);
 
-  // Stable random heart data — computed once so positions don't jump on re-render
   const heartData = useMemo(() =>
     Array.from({ length: 10 }, (_, i) => ({
       left: Math.random() * 100,
@@ -22,26 +26,23 @@ const Home = () => {
     []
   );
 
-  // 🎉 Confetti on page load
   useEffect(() => {
-    confetti({
-      particleCount: 150,
-      spread: 90,
-      origin: { y: 0.6 },
-    });
+    confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
   }, []);
 
-  // 📳 Enable motion immediately on non-iOS (no permission needed)
-  useEffect(() => {
-    if (
-      typeof DeviceMotionEvent === 'undefined' ||
-      typeof DeviceMotionEvent.requestPermission !== 'function'
-    ) {
-      setMotionAllowed(true);
+  const handleBalloonClick = async () => {
+    if (needsMotionPermission) {
+      try {
+        const result = await DeviceMotionEvent.requestPermission();
+        if (result === 'granted') setShakeEnabled(true);
+      } catch {
+        // permission denied or unavailable
+      }
+    } else {
+      setShakeEnabled(true);
     }
-  }, []);
+  };
 
-  // 🤲 Long press + iOS motion permission on heart touch
   useEffect(() => {
     const heart = heartRef.current;
     if (!heart) return;
@@ -49,9 +50,7 @@ const Home = () => {
     let timer;
 
     const start = () => {
-      timer = setTimeout(() => {
-        setLongPressTriggered(true);
-      }, 1000);
+      timer = setTimeout(() => setLongPressTriggered(true), 1000);
     };
 
     const cancel = () => {
@@ -59,90 +58,72 @@ const Home = () => {
       clearTimeout(timer);
     };
 
-    const handleTouchStart = async (e) => {
+    const onTouchStart = (e) => {
       e.preventDefault();
       setHoldingHeart(true);
-
-      if (
-        typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function'
-      ) {
-        try {
-          const result = await DeviceMotionEvent.requestPermission();
-          if (result === 'granted') setMotionAllowed(true);
-        } catch (err) {
-          console.warn('Motion permission denied:', err);
-        }
-      } else {
-        setMotionAllowed(true);
-      }
-
       start();
     };
 
-    const handleMouseDown = () => {
+    const onMouseDown = () => {
       setHoldingHeart(true);
       start();
     };
 
-    const handleContextMenu = (e) => e.preventDefault();
-
-    heart.addEventListener('touchstart', handleTouchStart, { passive: false });
-    heart.addEventListener('mousedown', handleMouseDown);
+    heart.addEventListener('touchstart', onTouchStart, { passive: false });
+    heart.addEventListener('mousedown', onMouseDown);
     heart.addEventListener('touchend', cancel);
     heart.addEventListener('mouseup', cancel);
     heart.addEventListener('mouseleave', cancel);
     heart.addEventListener('touchmove', cancel);
-    heart.addEventListener('contextmenu', handleContextMenu);
+    heart.addEventListener('contextmenu', (e) => e.preventDefault());
 
     return () => {
       clearTimeout(timer);
-      heart.removeEventListener('touchstart', handleTouchStart);
-      heart.removeEventListener('mousedown', handleMouseDown);
+      heart.removeEventListener('touchstart', onTouchStart);
+      heart.removeEventListener('mousedown', onMouseDown);
       heart.removeEventListener('touchend', cancel);
       heart.removeEventListener('mouseup', cancel);
       heart.removeEventListener('mouseleave', cancel);
       heart.removeEventListener('touchmove', cancel);
-      heart.removeEventListener('contextmenu', handleContextMenu);
     };
   }, []);
 
-  // 📳 Shake detection
   useEffect(() => {
-    if (!motionAllowed) return;
+    if (!shakeEnabled) return;
 
-    let lastTime = Date.now();
+    let lastTriggered = Date.now();
     let lastX = null, lastY = null, lastZ = null;
-    const THRESHOLD = 15;
 
-    const handleMotion = (event) => {
-      const current = event.accelerationIncludingGravity;
-      if (!current) return;
+    const onMotion = (e) => {
+      const now = Date.now();
+      if (now - lastTriggered < 1000) return;
 
-      const { x, y, z } = current;
+      const accel = e.acceleration;
+      if (accel && accel.x != null) {
+        if (Math.abs(accel.x) + Math.abs(accel.y) + Math.abs(accel.z) > 12) {
+          lastTriggered = now;
+          setShakeTriggered(true);
+          confetti();
+        }
+        return;
+      }
 
+      const raw = e.accelerationIncludingGravity;
+      if (!raw) return;
       if (lastX !== null) {
-        const total =
-          Math.abs(x - lastX) +
-          Math.abs(y - lastY) +
-          Math.abs(z - lastZ);
-
-        const now = Date.now();
-        if (total > THRESHOLD && now - lastTime > 1000) {
-          lastTime = now;
+        const delta = Math.abs(raw.x - lastX) + Math.abs(raw.y - lastY) + Math.abs(raw.z - lastZ);
+        if (delta > 15) {
+          lastTriggered = now;
           setShakeTriggered(true);
           confetti();
         }
       }
-
-      lastX = x;
-      lastY = y;
-      lastZ = z;
+      lastX = raw.x; lastY = raw.y; lastZ = raw.z;
     };
 
-    window.addEventListener('devicemotion', handleMotion);
-    return () => window.removeEventListener('devicemotion', handleMotion);
-  }, [motionAllowed]);
+    window.addEventListener('devicemotion', onMotion);
+    return () => window.removeEventListener('devicemotion', onMotion);
+  }, [shakeEnabled]);
 
   return (
     <div className="home-container">
@@ -154,14 +135,16 @@ const Home = () => {
         <Link to="/compliments"><button>Compliment Machine</button></Link>
       </div>
 
-      <div style={{ position: 'relative', display: 'inline-block', marginTop: '12px' }}>
-        <img
-          ref={heartRef}
-          src="/purple-heart-pulse.gif"
-          alt="pulsing purple heart"
-          className="heart-img"
-          style={{ animation: holdingHeart ? 'pulse 1s infinite' : 'none' }}
-        />
+      <div style={{ position: 'relative', display: 'inline-block', marginTop: '28px' }}>
+        <div ref={heartRef} className={`heart-outer${holdingHeart ? ' heart-pulsing' : ''}`}>
+          <div className="heart-wrap">
+            <img
+              src="/purple-heart-pulse.gif"
+              alt="pulsing purple heart"
+              className="heart-img"
+            />
+          </div>
+        </div>
         {holdingHeart && (
           <div
             style={{
@@ -177,6 +160,30 @@ const Home = () => {
               pointerEvents: 'none',
             }}
           />
+        )}
+      </div>
+
+      <div className="balloon-slot">
+        {!shakeEnabled && (
+          <span className="balloon-wrap">
+            <button
+              className="balloon-btn"
+              onClick={() => setPopping(true)}
+              aria-label="Enable shake"
+            >
+              <span
+                className={popping ? 'balloon-emoji balloon-emoji-pop' : 'balloon-emoji'}
+                onAnimationEnd={(e) => {
+                  if (e.animationName === 'balloonPop') {
+                    setPopping(false);
+                    handleBalloonClick();
+                  }
+                }}
+              >
+                🎈
+              </span>
+            </button>
+          </span>
         )}
       </div>
 
@@ -199,16 +206,18 @@ const Home = () => {
         </div>
       )}
 
-      {(longPressTriggered || shakeTriggered) && (
-        <div className="message-box">
-          {longPressTriggered && (
-            <p>✨ You held my heart long enough… just like real life 💜</p>
-          )}
-          {shakeTriggered && (
-            <p>📱 You shook things up… just like you shook up my world 🌎💘</p>
-          )}
-        </div>
-      )}
+      <div className="heart-message-area">
+        {longPressTriggered && (
+          <p className="heart-message">✨ You held my heart long enough… <br className="mobile-break" />just like real life 💜</p>
+        )}
+        {shakeTriggered && (
+          <p className="heart-message">📱 You shook things up… just like you shook up my world 🌎💘</p>
+        )}
+      </div>
+
+      <footer className="year-footer">
+        2025
+      </footer>
     </div>
   );
 };

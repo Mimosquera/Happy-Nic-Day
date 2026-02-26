@@ -73,6 +73,7 @@ const WouldYouStillDate = () => {
       <button onClick={nextQuestion}>Next Question 💭</button>
       <p>Answer wisely…</p>
       <BackButton />
+      <footer className="year-footer">2025</footer>
     </div>
   );
 };

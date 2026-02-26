@@ -68,6 +68,7 @@ const MicTest = () => {
         }}
       />
       <p>Volume: {volume.toFixed(2)}</p>
+      <footer className="year-footer">2025</footer>
     </div>
   );
 };
