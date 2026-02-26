@@ -9,11 +9,13 @@ const needsMotionPermission =
 
 const Home = () => {
   const [shakeEnabled, setShakeEnabled] = useState(false);
-  const [longPressTriggered, setLongPressTriggered] = useState(false);
+  const [messageVisible, setMessageVisible] = useState(false);
+  const [heartsVisible, setHeartsVisible] = useState(false);
   const [shakeTriggered, setShakeTriggered] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
   const [popping, setPopping] = useState(false);
   const heartRef = useRef(null);
+  const messageVisibleRef = useRef(false);
 
   const heartData = useMemo(() =>
     Array.from({ length: 10 }, (_, i) => ({
@@ -50,7 +52,15 @@ const Home = () => {
     let timer;
 
     const start = () => {
-      timer = setTimeout(() => setLongPressTriggered(true), 1000);
+      timer = setTimeout(() => {
+        if (!messageVisibleRef.current) {
+          messageVisibleRef.current = true;
+          setMessageVisible(true);
+          setHeartsVisible(true);
+        } else {
+          setHeartsVisible((prev) => !prev);
+        }
+      }, 1000);
     };
 
     const cancel = () => {
@@ -187,7 +197,7 @@ const Home = () => {
         )}
       </div>
 
-      {longPressTriggered && (
+      {heartsVisible && (
         <div className="floating-hearts">
           {heartData.map((h, i) => (
             <span
@@ -207,7 +217,7 @@ const Home = () => {
       )}
 
       <div className="heart-message-area">
-        {longPressTriggered && (
+        {messageVisible && (
           <p className="heart-message">✨ You held my heart long enough… <br className="mobile-break" />just like real life 💜</p>
         )}
         {shakeTriggered && (

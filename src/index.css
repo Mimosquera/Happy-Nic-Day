@@ -1,6 +1,7 @@
 html {
   background-color: #dacefc;
   overscroll-behavior: none;
+  height: 100%;
 }
 
 *, *::before, *::after {
@@ -12,9 +13,10 @@ body {
   background-color: #dacefc;
   text-align: center;
   padding: 20px;
-  min-height: 100vh;
+  height: 100%;
   margin: 0;
   overscroll-behavior: none;
+  overflow: hidden;
 }
 
 /* ─── Containers ─────────────────────────────── */
@@ -28,7 +30,8 @@ body {
   margin: 0 auto;
   padding: 32px 24px 24px;
   gap: 10px;
-  min-height: calc(100vh - 40px);
+  height: calc(100vh - 40px);
+  overflow: hidden;
 }
 
 /* ─── Typography ─────────────────────────────── */
