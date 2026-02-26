@@ -461,9 +461,9 @@ button:disabled {
   }
 
   .nav-buttons button {
-    width: 80%;
-    max-width: 360px;
-    white-space: normal;
+    width: 95%;
+    max-width: 450px;
+    white-space: nowrap;
     font-size: 1rem;
     padding: 12px 20px;
   }

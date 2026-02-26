@@ -13,6 +13,7 @@ const Home = () => {
   const [heartsVisible, setHeartsVisible] = useState(false);
   const [shakeTriggered, setShakeTriggered] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
+  const [ringVisible, setRingVisible] = useState(false);
   const [popping, setPopping] = useState(false);
   const [balloonPopped, setBalloonPopped] = useState(false);
   const heartRef = useRef(null);
@@ -63,6 +64,10 @@ const Home = () => {
         } else {
           setHeartsVisible((prev) => !prev);
         }
+        setHoldingHeart(false);
+        setRingVisible(true);
+        setTimeout(() => setRingVisible(false), 2000);
+        if (navigator.vibrate) navigator.vibrate(200);
       }, 1000);
     };
 
@@ -158,7 +163,7 @@ const Home = () => {
             />
           </div>
         </div>
-        {holdingHeart && (
+        {(holdingHeart || ringVisible) && (
           <div
             style={{
               position: 'absolute',
@@ -169,7 +174,7 @@ const Home = () => {
               borderRadius: '50%',
               transform: 'translate(-50%, -50%)',
               border: '3px dashed #d3b3ff',
-              animation: 'pulseOutline 1.5s ease-in-out infinite',
+              animation: holdingHeart ? 'pulseOutline 1.5s ease-in-out infinite' : 'none',
               pointerEvents: 'none',
             }}
           />
