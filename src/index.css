@@ -44,6 +44,10 @@ h1 {
   margin-bottom: 28px;
 }
 
+.would-you-still-date h1 {
+  line-height: 1.15;
+}
+
 h2 {
   font-size: clamp(1.5rem, 6vw, 3rem);
   margin: 8px 0;
