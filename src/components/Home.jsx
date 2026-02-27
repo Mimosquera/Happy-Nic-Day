@@ -293,7 +293,7 @@ const Home = () => {
                   }
                 }}
               >
-                🎈
+                <img src="/purple%20balloonn.png" alt="balloon" className="balloon-img" />
               </span>
             </button>
           </span>
@@ -342,7 +342,7 @@ const Home = () => {
             <span
               className={`balloon-emoji-fixed${risenBalloonPopping ? ' balloon-emoji-fixed-pop' : ''}`}
             >
-              🎈
+              <img src="/purple%20balloonn.png" alt="balloon" className="balloon-img" />
             </span>
           </span>
         </div>

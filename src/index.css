@@ -248,8 +248,16 @@ button:disabled {
 /* The emoji itself — filter + scale live here */
 .balloon-emoji {
   display: inline-block;
-  filter: hue-rotate(270deg) saturate(1.4);
   transition: transform 0.15s ease;
+}
+
+.balloon-img {
+  width: 9rem;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .balloon-btn:hover .balloon-emoji {
@@ -307,9 +315,7 @@ button:disabled {
 
 .balloon-emoji-fixed {
   display: inline-block;
-  font-size: 4.5rem;
   line-height: 1;
-  filter: hue-rotate(270deg) saturate(1.4);
   animation: balloonY 2.9s ease-in-out 7.8s infinite;
 }
 
