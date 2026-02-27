@@ -37,7 +37,7 @@ const questions = [
 ];
 
 
-function shuffleArray(array) {
+function shuffle(array) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -47,8 +47,7 @@ function shuffleArray(array) {
 }
 
 const WouldYouStillDate = () => {
-  // Lazy initialiser — shuffled immediately so first render always has a question
-  const [shuffledQuestions, setShuffledQuestions] = useState(() => shuffleArray(questions));
+  const [shuffledQuestions, setShuffledQuestions] = useState(() => shuffle(questions));
   const [index, setIndex] = useState(0);
   const [fadeKey, setFadeKey] = useState(0);
 
@@ -56,7 +55,7 @@ const WouldYouStillDate = () => {
     if (index < shuffledQuestions.length - 1) {
       setIndex(index + 1);
     } else {
-      setShuffledQuestions(shuffleArray(questions));
+      setShuffledQuestions(shuffle(questions));
       setIndex(0);
     }
     setFadeKey(prev => prev + 1);

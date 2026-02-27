@@ -9,14 +9,10 @@ const needsMotionPermission =
 
 const Home = () => {
   const [shakeEnabled, setShakeEnabled] = useState(() => {
-    // On iOS, if permission was previously granted, auto-enable so no re-prompt is needed
-    if (typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission === 'function') {
-      return localStorage.getItem('motionPermission') === 'granted';
-    }
+    if (needsMotionPermission) return localStorage.getItem('motionPermission') === 'granted';
     return false;
   });
-  const [activeMessage, setActiveMessage] = useState(null); // 'heart' | 'shake'
+  const [activeMessage, setActiveMessage] = useState(null);
   const [heartsVisible, setHeartsVisible] = useState(false);
   const [holdingHeart, setHoldingHeart] = useState(false);
   const [ringVisible, setRingVisible] = useState(false);
@@ -26,6 +22,7 @@ const Home = () => {
   const [risenBalloonPopping, setRisenBalloonPopping] = useState(false);
   const [balloonKey, setBalloonKey] = useState(0);
   const [balloonTransition, setBalloonTransition] = useState('top 6s ease-out');
+
   const heartRef = useRef(null);
   const activeMessageRef = useRef(null);
   const touchOriginRef = useRef(null);
@@ -37,25 +34,20 @@ const Home = () => {
   const cleanupRef = useRef(null);
   const risenBalloonPoppingRef = useRef(false);
 
-  // Compute stop position: vertically centred between heart-message-area and footer
-  const calcTarget = () => {
-    const msg = heartMessageAreaRef.current;
-    const ft  = footerRef.current;
-    if (!msg || !ft) return null;
-    const msgBottom  = msg.getBoundingClientRect().bottom;
-    const footerTop  = ft.getBoundingClientRect().top;
-    // Measure actual balloon height if available, fallback to estimate
-    const balloonH = risenRef.current
-      ? risenRef.current.getBoundingClientRect().height
-      : 144;
-    return msgBottom + (footerTop - msgBottom) / 2 - balloonH / 2;
-  };
-
-  // Keep refs in sync so event-handler closures always see the latest value
   useEffect(() => { activeMessageRef.current = activeMessage; }, [activeMessage]);
   useEffect(() => { risenBalloonPoppingRef.current = risenBalloonPopping; }, [risenBalloonPopping]);
 
-  // After balloon-slot collapses (1.5s), float the first risen balloon to centred position
+  const calcTarget = () => {
+    const msg = heartMessageAreaRef.current;
+    const ft = footerRef.current;
+    if (!msg || !ft) return null;
+    const msgBottom = msg.getBoundingClientRect().bottom;
+    const footerTop = ft.getBoundingClientRect().top;
+    const balloonH = risenRef.current ? risenRef.current.getBoundingClientRect().height : 144;
+    return msgBottom + (footerTop - msgBottom) / 2 - balloonH / 2;
+  };
+
+  // first rise after balloon-slot finishes collapsing
   useEffect(() => {
     if (!balloonPopped) return;
     const id = setTimeout(() => {
@@ -67,6 +59,49 @@ const Home = () => {
     }, 1600);
     return () => clearTimeout(id);
   }, [balloonPopped]);
+
+  // re-rise after each pop: snap off-screen, then float back up
+  useEffect(() => {
+    if (!risenBalloonPopping) return;
+    const id = setTimeout(() => {
+      setRisenBalloonPopping(false);
+      setBalloonTransition('none');
+      setBalloonTop((window.visualViewport?.height ?? window.innerHeight) + 80);
+      setBalloonKey((k) => k + 1);
+    }, 500);
+    return () => clearTimeout(id);
+  }, [risenBalloonPopping]);
+
+  useEffect(() => {
+    if (balloonKey === 0 || targetTopRef.current == null) return;
+    const fresh = calcTarget();
+    if (fresh != null) targetTopRef.current = fresh;
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        setBalloonTransition('top 6s ease-out');
+        setBalloonTop(targetTopRef.current);
+      });
+      cleanupRef.current = raf2;
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (cleanupRef.current) cancelAnimationFrame(cleanupRef.current);
+    };
+  }, [balloonKey]);
+
+  // nudge balloon whenever a message appears or switches
+  useEffect(() => {
+    if (!balloonPopped || !activeMessage) return;
+    const raf = requestAnimationFrame(() => {
+      if (risenBalloonPoppingRef.current) return;
+      const fresh = calcTarget();
+      if (fresh == null) return;
+      targetTopRef.current = fresh;
+      setBalloonTransition('top 1.5s ease-in-out');
+      setBalloonTop(fresh);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [activeMessage, balloonPopped]);
 
   const heartData = useMemo(() =>
     Array.from({ length: 10 }, (_, i) => ({
@@ -84,62 +119,7 @@ const Home = () => {
     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
   }, []);
 
-  const handleRisenBalloonClick = () => {
-    if (risenBalloonPopping) return;
-    if (activeMessageRef.current === 'heart') shakeReadyRef.current = true;
-    setRisenBalloonPopping(true);
-  };
-
-  // After risen balloon pops, reset it off-screen then float it back up
-  useEffect(() => {
-    if (!risenBalloonPopping) return;
-    // Wait for pop animation to finish (~500ms), then snap off-screen
-    const popTimer = setTimeout(() => {
-      setRisenBalloonPopping(false);
-      setBalloonTransition('none'); // disable transition for instant snap
-      const vh = window.visualViewport?.height ?? window.innerHeight;
-      setBalloonTop(vh + 80);
-      setBalloonKey((k) => k + 1);
-    }, 500);
-    return () => clearTimeout(popTimer);
-  }, [risenBalloonPopping]);
-
-  // When balloonKey changes (new balloon spawned off-screen), float it up after a frame
-  useEffect(() => {
-    if (balloonKey === 0 || targetTopRef.current == null) return;
-    // Recalculate in case of resize / orientation change
-    const fresh = calcTarget();
-    if (fresh != null) targetTopRef.current = fresh;
-    // Give the browser a frame to paint the off-screen position with no transition
-    const raf1 = requestAnimationFrame(() => {
-      const raf2 = requestAnimationFrame(() => {
-        setBalloonTransition('top 6s ease-out'); // re-enable transition for rise
-        setBalloonTop(targetTopRef.current);
-      });
-      cleanupRef.current = raf2;
-    });
-    return () => {
-      cancelAnimationFrame(raf1);
-      if (cleanupRef.current) cancelAnimationFrame(cleanupRef.current);
-    };
-  }, [balloonKey]);
-
-  // When a message appears or switches, smoothly nudge the balloon so it never overlaps
-  useEffect(() => {
-    if (!balloonPopped || !activeMessage) return;
-    const raf = requestAnimationFrame(() => {
-      if (risenBalloonPoppingRef.current) return;
-      const fresh = calcTarget();
-      if (fresh == null) return;
-      targetTopRef.current = fresh;
-      setBalloonTransition('top 1.5s ease-in-out');
-      setBalloonTop(fresh);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [activeMessage, balloonPopped]);
-
   const handleBalloonClick = async () => {
-    // Request permission immediately (must be in user-gesture context for iOS)
     if (needsMotionPermission) {
       try {
         const result = await DeviceMotionEvent.requestPermission();
@@ -147,28 +127,29 @@ const Home = () => {
           localStorage.setItem('motionPermission', 'granted');
           setShakeEnabled(true);
         }
-      } catch {
-        // permission denied or unavailable
-      }
+      } catch {}
     } else {
       setShakeEnabled(true);
     }
     setPopping(true);
   };
 
+  const handleRisenBalloonClick = () => {
+    if (risenBalloonPopping) return;
+    if (activeMessageRef.current === 'heart') shakeReadyRef.current = true;
+    setRisenBalloonPopping(true);
+  };
+
   useEffect(() => {
     const heart = heartRef.current;
     if (!heart) return;
-
     let timer;
 
     const start = () => {
       timer = setTimeout(() => {
         if (activeMessageRef.current === 'heart') {
-          // Heart message already showing — toggle the floating hearts
           setHeartsVisible((prev) => !prev);
         } else {
-          // First trigger, or swapping from shake message
           setActiveMessage('heart');
           setHeartsVisible(true);
         }
@@ -191,16 +172,6 @@ const Home = () => {
       start();
     };
 
-    const onMouseDown = () => {
-      setHoldingHeart(true);
-      start();
-    };
-
-    heart.addEventListener('touchstart', onTouchStart, { passive: false });
-    heart.addEventListener('mousedown', onMouseDown);
-    heart.addEventListener('touchend', cancel);
-    heart.addEventListener('mouseup', cancel);
-    heart.addEventListener('mouseleave', cancel);
     const onTouchMove = (e) => {
       if (!touchOriginRef.current) return;
       const dx = e.touches[0].clientX - touchOriginRef.current.x;
@@ -208,23 +179,29 @@ const Home = () => {
       if (Math.sqrt(dx * dx + dy * dy) > 12) cancel();
     };
 
+    const onMouseDown = () => { setHoldingHeart(true); start(); };
+
+    heart.addEventListener('touchstart', onTouchStart, { passive: false });
+    heart.addEventListener('touchend', cancel);
     heart.addEventListener('touchmove', onTouchMove);
+    heart.addEventListener('mousedown', onMouseDown);
+    heart.addEventListener('mouseup', cancel);
+    heart.addEventListener('mouseleave', cancel);
     heart.addEventListener('contextmenu', (e) => e.preventDefault());
 
     return () => {
       clearTimeout(timer);
       heart.removeEventListener('touchstart', onTouchStart);
-      heart.removeEventListener('mousedown', onMouseDown);
       heart.removeEventListener('touchend', cancel);
+      heart.removeEventListener('touchmove', onTouchMove);
+      heart.removeEventListener('mousedown', onMouseDown);
       heart.removeEventListener('mouseup', cancel);
       heart.removeEventListener('mouseleave', cancel);
-      heart.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
 
   useEffect(() => {
     if (!shakeEnabled) return;
-
     let lastTriggered = Date.now();
     let lastX = null, lastY = null, lastZ = null;
 
@@ -274,45 +251,31 @@ const Home = () => {
       <div className="heart-area-wrap" style={{ position: 'relative', display: 'inline-block' }}>
         <div ref={heartRef} className={`heart-outer${holdingHeart ? ' heart-pulsing' : ''}`}>
           <div className="heart-wrap">
-            <img
-              src="/purple-heart-pulse.gif"
-              alt="pulsing purple heart"
-              className="heart-img"
-            />
+            <img src="/purple-heart-pulse.gif" alt="pulsing purple heart" className="heart-img" />
           </div>
         </div>
         {(holdingHeart || ringVisible) && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: '110%',
-              height: '110%',
-              borderRadius: '50%',
-              transform: 'translate(-50%, -50%)',
-              border: '3px dashed #d3b3ff',
-              animation: holdingHeart ? 'pulseOutline 1.5s ease-in-out infinite' : 'none',
-              pointerEvents: 'none',
-            }}
-          />
+          <div style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            width: '110%', height: '110%',
+            borderRadius: '50%',
+            transform: 'translate(-50%, -50%)',
+            border: '3px dashed #d3b3ff',
+            animation: holdingHeart ? 'pulseOutline 1.5s ease-in-out infinite' : 'none',
+            pointerEvents: 'none',
+          }} />
         )}
       </div>
 
       <div className={`balloon-slot${balloonPopped ? ' balloon-slot-popped' : ''}`}>
         {!balloonPopped && (
           <span className="balloon-wrap">
-            <button
-              className="balloon-btn"
-              onClick={handleBalloonClick}
-              aria-label="Enable shake"
-            >
+            <button className="balloon-btn" onClick={handleBalloonClick} aria-label="Pop balloon">
               <span
                 className={popping ? 'balloon-emoji balloon-emoji-pop' : 'balloon-emoji'}
                 onAnimationEnd={(e) => {
-                  if (e.animationName === 'balloonPop') {
-                    setBalloonPopped(true);
-                  }
+                  if (e.animationName === 'balloonPop') setBalloonPopped(true);
                 }}
               >
                 <img src="/purple%20balloonn.png" alt="balloon" className="balloon-img" />
@@ -325,17 +288,13 @@ const Home = () => {
       {heartsVisible && (
         <div className="floating-hearts">
           {heartData.map((h, i) => (
-            <span
-              key={i}
-              className="heart"
-              style={{
-                left: `${h.left}%`,
-                fontSize: `${h.size}rem`,
-                animationDelay: `${h.delay}s`,
-                animationDuration: `${h.duration}s`,
-                color: h.color,
-              }}
-            >
+            <span key={i} className="heart" style={{
+              left: `${h.left}%`,
+              fontSize: `${h.size}rem`,
+              animationDelay: `${h.delay}s`,
+              animationDuration: `${h.duration}s`,
+              color: h.color,
+            }}>
               {h.emoji}
             </span>
           ))}
@@ -344,10 +303,14 @@ const Home = () => {
 
       <div className="heart-message-area" ref={heartMessageAreaRef}>
         {activeMessage === 'heart' && (
-          <p key="heart" className="heart-message heart-msg-heart">You held my heart long enough… <br className="mobile-break" />just like real life ♥︎</p>
+          <p key="heart" className="heart-message heart-msg-heart">
+            You held my heart long enough… <br className="mobile-break" />just like real life ♥︎
+          </p>
         )}
         {activeMessage === 'shake' && (
-          <p key="shake" className="heart-message heart-msg-shake">You shook things up… <br className="mobile-break" />just like you shook up my world ♥︎</p>
+          <p key="shake" className="heart-message heart-msg-shake">
+            You shook things up… <br className="mobile-break" />just like you shook up my world ♥︎
+          </p>
         )}
       </div>
 
@@ -355,25 +318,18 @@ const Home = () => {
         <div
           ref={risenRef}
           className="balloon-rising-fixed"
-          style={{
-            top: `${balloonTop}px`,
-            transition: balloonTransition,
-          }}
+          style={{ top: `${balloonTop}px`, transition: balloonTransition }}
           aria-hidden="true"
         >
           <span key={balloonKey} className="balloon-wrap-fixed" onClick={handleRisenBalloonClick}>
-            <span
-              className={`balloon-emoji-fixed${risenBalloonPopping ? ' balloon-emoji-fixed-pop' : ''}`}
-            >
+            <span className={`balloon-emoji-fixed${risenBalloonPopping ? ' balloon-emoji-fixed-pop' : ''}`}>
               <img src="/purple%20balloonn.png" alt="balloon" className="balloon-img" />
             </span>
           </span>
         </div>
       )}
 
-      <footer className="year-footer" ref={footerRef}>
-        2025
-      </footer>
+      <footer className="year-footer" ref={footerRef}>2025</footer>
     </div>
   );
 };

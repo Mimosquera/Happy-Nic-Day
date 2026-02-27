@@ -45,7 +45,7 @@ function shuffle(array) {
 
 const ComplimentMachine = () => {
   const [shuffled, setShuffled] = useState([]);
-  const [index, setIndex] = useState(-1); // -1 so nothing shows until first click
+  const [index, setIndex] = useState(-1);
   const [fadeKey, setFadeKey] = useState(0);
 
   useEffect(() => {

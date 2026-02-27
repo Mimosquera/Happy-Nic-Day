@@ -19,8 +19,6 @@ body {
   overflow: hidden;
 }
 
-/* ─── Containers ─────────────────────────────── */
-
 .home-container,
 .page {
   display: flex;
@@ -31,11 +29,9 @@ body {
   padding: 32px 24px 24px;
   gap: 10px;
   height: calc(100vh - 40px);
-  height: calc(100svh - 40px); /* iOS Safari: svh excludes browser chrome */
+  height: calc(100svh - 40px);
   overflow: hidden;
 }
-
-/* ─── Typography ─────────────────────────────── */
 
 h1 {
   font-size: clamp(2.6rem, 10vw, 4.5rem);
@@ -67,8 +63,6 @@ p {
 a {
   text-decoration: none;
 }
-
-/* ─── Images ─────────────────────────────────── */
 
 img {
   max-width: 100%;
@@ -114,8 +108,6 @@ img {
   margin-top: 28px;
 }
 
-/* ─── Buttons ────────────────────────────────── */
-
 button {
   margin: 6px;
   padding: 14px 28px;
@@ -153,7 +145,6 @@ button:active {
   box-shadow: 0 2px 6px rgba(139, 0, 182, 0.25);
 }
 
-/* Remove focus ring; tap flash handled by -webkit-tap-highlight-color */
 button:focus {
   outline: none;
 }
@@ -164,8 +155,6 @@ button:disabled {
   transform: none;
   box-shadow: 0 4px 10px rgba(139, 0, 182, 0.2);
 }
-
-/* ─── Nav Buttons Row ────────────────────────── */
 
 .btn-sm {
   padding: 10px 20px;
@@ -191,9 +180,6 @@ button:disabled {
   font-size: clamp(0.8rem, 2vw, 0.95rem);
 }
 
-/* ─── Balloon shake button ───────────────────── */
-
-/* Outer wrapper drifts left/right on its own cycle */
 .balloon-slot {
   min-height: 160px;
   display: flex;
@@ -213,7 +199,6 @@ button:disabled {
   animation: balloonX 3.7s ease-in-out infinite;
 }
 
-/* Inner button drifts up/down + sways on a different cycle */
 .balloon-btn {
   display: block;
   font-size: 4.5rem;
@@ -228,15 +213,14 @@ button:disabled {
   animation: balloonY 2.9s ease-in-out infinite;
 }
 
-.balloon-btn:hover {
-  background: none;
-  box-shadow: none;
-  animation: none;
-}
-
+.balloon-btn:hover,
 .balloon-btn:active {
   background: none;
   box-shadow: none;
+}
+
+.balloon-btn:hover {
+  animation: none;
 }
 
 .balloon-btn:focus,
@@ -245,7 +229,6 @@ button:disabled {
   box-shadow: none;
 }
 
-/* The emoji itself — filter + scale live here */
 .balloon-emoji {
   display: inline-block;
   transition: transform 0.15s ease;
@@ -269,7 +252,6 @@ button:disabled {
   transform: scale(0.95);
 }
 
-/* Pop animation — runs on the emoji span only, no box visible */
 .balloon-emoji-pop {
   animation: balloonPop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
   pointer-events: none;
@@ -281,18 +263,16 @@ button:disabled {
 }
 
 @keyframes balloonY {
-  0%, 100% { transform: translateY(0px)   rotate(0deg); }
+  0%, 100% { transform: translateY(0px)    rotate(0deg); }
   50%       { transform: translateY(-18px) rotate(-4deg); }
 }
 
 @keyframes balloonPop {
-  0%   { transform: scale(1)    translateY(0);   opacity: 1; }
+  0%   { transform: scale(1)    translateY(0);    opacity: 1; }
   40%  { transform: scale(1.35) translateY(-8px); opacity: 1; }
   60%  { transform: scale(0.6)  translateY(4px);  opacity: 0.7; }
-  100% { transform: scale(0)    translateY(0);   opacity: 0; }
+  100% { transform: scale(0)    translateY(0);    opacity: 0; }
 }
-
-/* ─── Risen balloon (floats up after pop) ────── */
 
 .balloon-rising-fixed {
   position: fixed;
@@ -302,7 +282,6 @@ button:disabled {
   justify-content: center;
   z-index: 5;
   pointer-events: none;
-  /* transition controlled inline via balloonTransition state */
 }
 
 .balloon-wrap-fixed {
@@ -323,8 +302,6 @@ button:disabled {
 .balloon-emoji-fixed-pop {
   animation: balloonPop 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
 }
-
-/* ─── Ghost / Secondary Button ──────────────── */
 
 .btn-ghost {
   background: transparent;
@@ -357,8 +334,6 @@ button:disabled {
   transform: scale(0.97);
 }
 
-/* ─── Back Button ────────────────────────────── */
-
 .back-button-wrap {
   margin-top: 20px;
 }
@@ -390,8 +365,6 @@ button:disabled {
   transform: scale(1.05);
 }
 
-/* ─── Year Footer ────────────────────────────── */
-
 .year-footer {
   margin-top: auto;
   padding-top: 32px;
@@ -403,14 +376,10 @@ button:disabled {
   letter-spacing: 0.05em;
 }
 
-/* ─── Cake blow-out ──────────────────────────── */
-
 .blow-out {
   animation: fadeOut 1s ease-in forwards;
   filter: brightness(30%) saturate(0.5);
 }
-
-/* ─── Floating Hearts ────────────────────────── */
 
 .floating-hearts {
   position: fixed;
@@ -428,8 +397,6 @@ button:disabled {
   animation: floatUp 6s ease-in-out infinite;
   opacity: 0;
 }
-
-/* ─── Triggered message ──────────────────────── */
 
 .heart-message-area {
   min-height: 60px;
@@ -485,36 +452,32 @@ button:disabled {
   padding: 0 16px;
 }
 
-/* ─── Utility ────────────────────────────────── */
-
 .fade-in {
   animation: fadeInUp 0.4s ease-out;
 }
 
-/* ─── Animations ─────────────────────────────── */
+.heart-pulsing {
+  animation: pulse 4s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
 
 @keyframes floatUp {
-  0% {
-    transform: translateY(0) translateX(0) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-120vh) translateX(-20px) scale(1.3);
-    opacity: 0;
-  }
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(-120vh) translateX(-20px) scale(1.3); opacity: 0; }
 }
 
 @keyframes fadeOut {
-  0% { opacity: 1; transform: scale(1); }
+  0%   { opacity: 1; transform: scale(1); }
   100% { opacity: 0.4; transform: scale(1.05); }
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes pulse {
@@ -526,52 +489,24 @@ button:disabled {
   100% { transform: scale3d(1, 1, 1); }
 }
 
-.heart-pulsing {
-  animation: pulse 4s ease-in-out infinite;
-  will-change: transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-}
-
 @keyframes pulseOutline {
-  0% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-  100% {
-    opacity: 0.6;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  0%   { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.1); }
+  100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
 }
-
 
 @keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0%   { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
-
-/* ─── Responsive ─────────────────────────────── */
 
 @media (min-width: 481px) {
   .heart-outer {
     margin-top: 24px;
   }
-
   .balloon-slot {
     margin-top: 16px;
   }
-
   .heart-message-area {
     margin-top: 12px;
   }
@@ -586,39 +521,34 @@ button:disabled {
   .page {
     padding: 16px 10px 10px;
     gap: 4px;
-    /* Correct height for mobile: body has 12px padding × 2 = 24px */
     height: calc(100vh - 24px);
     height: calc(100svh - 24px);
   }
 
-  /* Tighten h1 gap on home page so content fits */
   .home-container h1 {
     margin-bottom: 8px;
   }
 
-  /* Scale heart down so bottom elements stay visible */
   .heart-wrap,
   .heart-outer {
     width: min(160px, 46vw);
     height: min(160px, 46vw);
   }
 
-  /* Compress balloon area — no fixed tall reserve needed on small screens */
   .balloon-slot {
     min-height: 50px;
+    margin-top: 48px;
   }
 
   .balloon-wrap {
     margin-top: 4px;
   }
 
-  /* Let message area size naturally and push it lower */
   .heart-message-area {
     min-height: 0;
     margin-top: 16px;
   }
 
-  /* Tighten footer spacing */
   .year-footer {
     padding-top: 4px;
     padding-bottom: 0;
@@ -646,7 +576,6 @@ button:disabled {
     display: block;
   }
 
-  /* Home page only: push elements below header down, add breathing room */
   .home-container {
     gap: 10px;
   }
@@ -655,14 +584,7 @@ button:disabled {
     margin-top: 16px;
   }
 
-  /* Push heart and everything below it further down on mobile */
   .heart-area-wrap {
     margin-top: 20px;
   }
-
-  /* Push balloon and everything below it further down on mobile */
-  .balloon-slot {
-    margin-top: 48px;
-  }
-
 }

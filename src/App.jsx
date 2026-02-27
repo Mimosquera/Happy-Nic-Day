@@ -6,7 +6,6 @@ import WouldYouStillDate from './components/WouldYouStillDate';
 import ComplimentMachine from './components/ComplimentMachine';
 import MicTest from './components/MicTest';
 
-
 function App() {
   useEffect(() => {
     const timers = new WeakMap();

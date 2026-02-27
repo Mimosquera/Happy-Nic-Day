@@ -13,13 +13,11 @@ const CakePage = () => {
   const rafIdRef = useRef(null);
 
   useEffect(() => {
-    return () => {
-      stopListening(); // clean up on unmount
-    };
+    return () => stopListening();
   }, []);
 
   const startListening = async () => {
-    if (listening) return; // prevent double-fire before state updates
+    if (listening) return;
     setListening(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -28,22 +26,16 @@ const CakePage = () => {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = audioContext;
 
-      const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 512;
+      audioContext.createMediaStreamSource(stream).connect(analyser);
 
-      const dataArray = new Uint8Array(analyser.fftSize);
-      dataRef.current = dataArray;
+      dataRef.current = new Uint8Array(analyser.fftSize);
       analyserRef.current = analyser;
 
-      source.connect(analyser);
-
-      console.log('🎤 Started listening');
-
       detectWish();
-    } catch (error) {
-      console.error('🚫 Mic error:', error);
-      setListening(false); // re-enable button if permission denied
+    } catch {
+      setListening(false);
     }
   };
 
@@ -54,16 +46,13 @@ const CakePage = () => {
 
     let sum = 0;
     for (let i = 0; i < dataRef.current.length; i++) {
-      const deviation = dataRef.current[i] - 128;
-      sum += deviation * deviation;
+      const d = dataRef.current[i] - 128;
+      sum += d * d;
     }
 
-    const rms = Math.sqrt(sum / dataRef.current.length);
-    const volume = rms * 10; // scale up
-    console.log('💨 Mic RMS volume:', volume.toFixed(2));
+    const volume = Math.sqrt(sum / dataRef.current.length) * 10;
 
     if (volume > 300) {
-      console.log('🎉 Wish detected!');
       stopListening();
       setCandlesOut(true);
       audioRef.current.play();
@@ -74,14 +63,9 @@ const CakePage = () => {
 
   const stopListening = () => {
     if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
+    if (mediaStreamRef.current) mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+    if (audioContextRef.current) audioContextRef.current.close();
     setListening(false);
-    console.log('🛑 Stopped listening');
   };
 
   const resetCake = () => {
@@ -99,18 +83,18 @@ const CakePage = () => {
         alt="birthday cake"
         className={`cake-img${candlesOut ? ' blow-out' : ''}`}
       />
-
       {!candlesOut ? (
         <button className="btn-sm" onClick={startListening} disabled={listening}>
           {listening ? 'Listening...' : 'Blow Candles! 💨'}
         </button>
       ) : (
         <>
-          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2.2rem)', fontWeight: 700, color: '#5a0080' }}>Your wish better be about me ;)</p>
-          <button className="btn-sm btn-ghost" onClick={resetCake}>New Cake 🎂</button>
+          <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2.2rem)', fontWeight: 700, color: '#5a0080' }}>
+            Your wish better be about me ;)
+          </p>
+          <button className="btn-sm btn-ghost" onClick={resetCake}>New Cake 🎂</button>
         </>
       )}
-
       <BackButton />
       <footer className="year-footer">2025</footer>
     </div>
