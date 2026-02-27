@@ -25,7 +25,7 @@ const Home = () => {
   const [balloonTop, setBalloonTop] = useState(() => (window.visualViewport?.height ?? window.innerHeight) + 80);
   const [risenBalloonPopping, setRisenBalloonPopping] = useState(false);
   const [balloonKey, setBalloonKey] = useState(0);
-  const [balloonTransition, setBalloonTransition] = useState(true);
+  const [balloonTransition, setBalloonTransition] = useState('top 6s ease-out');
   const heartRef = useRef(null);
   const activeMessageRef = useRef(null);
   const touchOriginRef = useRef(null);
@@ -35,6 +35,7 @@ const Home = () => {
   const risenRef = useRef(null);
   const targetTopRef = useRef(null);
   const cleanupRef = useRef(null);
+  const risenBalloonPoppingRef = useRef(false);
 
   // Compute stop position: vertically centred between heart-message-area and footer
   const calcTarget = () => {
@@ -50,8 +51,9 @@ const Home = () => {
     return msgBottom + (footerTop - msgBottom) / 2 - balloonH / 2;
   };
 
-  // Keep ref in sync so event-handler closures always see the latest value
+  // Keep refs in sync so event-handler closures always see the latest value
   useEffect(() => { activeMessageRef.current = activeMessage; }, [activeMessage]);
+  useEffect(() => { risenBalloonPoppingRef.current = risenBalloonPopping; }, [risenBalloonPopping]);
 
   // After balloon-slot collapses (1.5s), float the first risen balloon to centred position
   useEffect(() => {
@@ -60,6 +62,7 @@ const Home = () => {
       const target = calcTarget();
       if (target == null) return;
       targetTopRef.current = target;
+      setBalloonTransition('top 6s ease-out');
       setBalloonTop(target);
     }, 1600);
     return () => clearTimeout(id);
@@ -93,7 +96,7 @@ const Home = () => {
     // Wait for pop animation to finish (~500ms), then snap off-screen
     const popTimer = setTimeout(() => {
       setRisenBalloonPopping(false);
-      setBalloonTransition(false); // disable transition for instant snap
+      setBalloonTransition('none'); // disable transition for instant snap
       const vh = window.visualViewport?.height ?? window.innerHeight;
       setBalloonTop(vh + 80);
       setBalloonKey((k) => k + 1);
@@ -110,7 +113,7 @@ const Home = () => {
     // Give the browser a frame to paint the off-screen position with no transition
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => {
-        setBalloonTransition(true); // re-enable transition
+        setBalloonTransition('top 6s ease-out'); // re-enable transition for rise
         setBalloonTop(targetTopRef.current);
       });
       cleanupRef.current = raf2;
@@ -120,6 +123,20 @@ const Home = () => {
       if (cleanupRef.current) cancelAnimationFrame(cleanupRef.current);
     };
   }, [balloonKey]);
+
+  // When a message appears or switches, smoothly nudge the balloon so it never overlaps
+  useEffect(() => {
+    if (!balloonPopped || !activeMessage) return;
+    const raf = requestAnimationFrame(() => {
+      if (risenBalloonPoppingRef.current) return;
+      const fresh = calcTarget();
+      if (fresh == null) return;
+      targetTopRef.current = fresh;
+      setBalloonTransition('top 1.5s ease-in-out');
+      setBalloonTop(fresh);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [activeMessage, balloonPopped]);
 
   const handleBalloonClick = async () => {
     // Request permission immediately (must be in user-gesture context for iOS)
@@ -340,7 +357,7 @@ const Home = () => {
           className="balloon-rising-fixed"
           style={{
             top: `${balloonTop}px`,
-            transition: balloonTransition ? 'top 6s ease-out' : 'none',
+            transition: balloonTransition,
           }}
           aria-hidden="true"
         >

@@ -451,10 +451,13 @@ button:disabled {
 
 .heart-msg-heart {
   color: #5a0080;
+  text-shadow: 0 0 14px rgba(90, 0, 128, 0.25);
 }
 
 .heart-msg-shake {
   color: #8b00b6;
+  font-style: italic;
+  letter-spacing: 0.02em;
 }
 
 .question-text {
