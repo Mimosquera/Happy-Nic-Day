@@ -241,7 +241,7 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <h1 style={{ whiteSpace: 'nowrap', fontSize: 'min(10vw, 4.5rem)' }}>Happy 24th Birthday! ♥︎</h1>
+      <h1 style={{ whiteSpace: 'nowrap', fontSize: 'min(8.5vw, 3.8rem)' }}>Happy 24th Birthday! ♥︎</h1>
 
       <div className="nav-buttons">
         <Link to="/cake"><button>Blow Out the Cake</button></Link>
