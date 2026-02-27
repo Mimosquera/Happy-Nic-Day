@@ -107,7 +107,7 @@ const CakePage = () => {
       ) : (
         <>
           <p style={{ fontSize: 'clamp(1.5rem, 6vw, 2.2rem)', fontWeight: 700, color: '#5a0080' }}>Your wish better be about me ;)</p>
-          <button className="btn-sm btn-ghost" onClick={resetCake}>New Cake 🎂</button>
+          <button className="btn-sm btn-ghost" onClick={resetCake}>New Cake 🎂</button>
         </>
       )}
 

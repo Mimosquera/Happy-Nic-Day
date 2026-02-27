@@ -70,7 +70,7 @@ const ComplimentMachine = () => {
         alt="smiling speech bubble"
         className="page-img"
       />
-      <button className="btn-sm" onClick={giveCompliment}>Give Me Compliment 💌</button>
+      <button className="btn-sm" onClick={giveCompliment}>Give Me Compliment 💌</button>
       {index >= 0 && (
         <p key={fadeKey} className="fade-in message-box">
           {shuffled[index]}

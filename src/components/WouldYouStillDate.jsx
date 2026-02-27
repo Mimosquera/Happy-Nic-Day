@@ -70,7 +70,7 @@ const WouldYouStillDate = () => {
         alt="heart with key"
         className="page-img"
       />
-      <button className="btn-sm" onClick={nextQuestion}>Next Question 💭</button>
+      <button className="btn-sm" onClick={nextQuestion}>Next Question 💭</button>
       <p key={fadeKey} className="fade-in question-text">{shuffledQuestions[index]}</p>
       <BackButton />
       <footer className="year-footer">2025</footer>

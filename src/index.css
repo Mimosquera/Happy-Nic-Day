@@ -258,6 +258,7 @@ button:disabled {
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+  filter: brightness(0.92) contrast(0.85) saturate(1.1);
 }
 
 .balloon-btn:hover .balloon-emoji {
