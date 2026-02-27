@@ -445,9 +445,16 @@ button:disabled {
 .heart-message {
   font-size: clamp(1.1rem, 4.5vw, 1.6rem);
   font-weight: 700;
-  color: #5a0080;
   animation: fadeInUp 0.4s ease-out both;
   margin: 6px 0;
+}
+
+.heart-msg-heart {
+  color: #5a0080;
+}
+
+.heart-msg-shake {
+  color: #b8006b;
 }
 
 .question-text {

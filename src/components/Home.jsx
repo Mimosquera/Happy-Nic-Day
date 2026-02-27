@@ -22,7 +22,7 @@ const Home = () => {
   const [ringVisible, setRingVisible] = useState(false);
   const [popping, setPopping] = useState(false);
   const [balloonPopped, setBalloonPopped] = useState(false);
-  const [balloonTop, setBalloonTop] = useState(() => window.innerHeight + 80);
+  const [balloonTop, setBalloonTop] = useState(() => (window.visualViewport?.height ?? window.innerHeight) + 80);
   const [risenBalloonPopping, setRisenBalloonPopping] = useState(false);
   const [balloonKey, setBalloonKey] = useState(0);
   const [balloonTransition, setBalloonTransition] = useState(true);
@@ -32,6 +32,7 @@ const Home = () => {
   const heartMessageAreaRef = useRef(null);
   const shakeReadyRef = useRef(false);
   const footerRef = useRef(null);
+  const risenRef = useRef(null);
   const targetTopRef = useRef(null);
   const cleanupRef = useRef(null);
 
@@ -42,7 +43,10 @@ const Home = () => {
     if (!msg || !ft) return null;
     const msgBottom  = msg.getBoundingClientRect().bottom;
     const footerTop  = ft.getBoundingClientRect().top;
-    const balloonH   = 72;            // ≈ 4.5 rem emoji height
+    // Measure actual balloon height if available, fallback to estimate
+    const balloonH = risenRef.current
+      ? risenRef.current.getBoundingClientRect().height
+      : 144;
     return msgBottom + (footerTop - msgBottom) / 2 - balloonH / 2;
   };
 
@@ -90,7 +94,8 @@ const Home = () => {
     const popTimer = setTimeout(() => {
       setRisenBalloonPopping(false);
       setBalloonTransition(false); // disable transition for instant snap
-      setBalloonTop(window.innerHeight + 80);
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      setBalloonTop(vh + 80);
       setBalloonKey((k) => k + 1);
     }, 500);
     return () => clearTimeout(popTimer);
@@ -322,15 +327,16 @@ const Home = () => {
 
       <div className="heart-message-area" ref={heartMessageAreaRef}>
         {activeMessage === 'heart' && (
-          <p key="heart" className="heart-message">You held my heart long enough… <br className="mobile-break" />just like real life ♥︎</p>
+          <p key="heart" className="heart-message heart-msg-heart">You held my heart long enough… <br className="mobile-break" />just like real life ♥︎</p>
         )}
         {activeMessage === 'shake' && (
-          <p key="shake" className="heart-message">You shook things up… <br className="mobile-break" />just like you shook up my world ♥︎</p>
+          <p key="shake" className="heart-message heart-msg-shake">You shook things up… <br className="mobile-break" />just like you shook up my world ♥︎</p>
         )}
       </div>
 
       {balloonPopped && (
         <div
+          ref={risenRef}
           className="balloon-rising-fixed"
           style={{
             top: `${balloonTop}px`,
