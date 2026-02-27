@@ -31,19 +31,30 @@ const Home = () => {
   const touchOriginRef = useRef(null);
   const heartMessageAreaRef = useRef(null);
   const shakeReadyRef = useRef(false);
+  const footerRef = useRef(null);
   const targetTopRef = useRef(null);
   const cleanupRef = useRef(null);
+
+  // Compute stop position: vertically centred between heart-message-area and footer
+  const calcTarget = () => {
+    const msg = heartMessageAreaRef.current;
+    const ft  = footerRef.current;
+    if (!msg || !ft) return null;
+    const msgBottom  = msg.getBoundingClientRect().bottom;
+    const footerTop  = ft.getBoundingClientRect().top;
+    const balloonH   = 72;            // ≈ 4.5 rem emoji height
+    return msgBottom + (footerTop - msgBottom) / 2 - balloonH / 2;
+  };
 
   // Keep ref in sync so event-handler closures always see the latest value
   useEffect(() => { activeMessageRef.current = activeMessage; }, [activeMessage]);
 
-  // After balloon-slot collapses (1.5s), measure heart-message-area and slide balloon up to it
+  // After balloon-slot collapses (1.5s), float the first risen balloon to centred position
   useEffect(() => {
     if (!balloonPopped) return;
     const id = setTimeout(() => {
-      if (!heartMessageAreaRef.current) return;
-      const rect = heartMessageAreaRef.current.getBoundingClientRect();
-      const target = rect.bottom + 80;
+      const target = calcTarget();
+      if (target == null) return;
       targetTopRef.current = target;
       setBalloonTop(target);
     }, 1600);
@@ -88,6 +99,9 @@ const Home = () => {
   // When balloonKey changes (new balloon spawned off-screen), float it up after a frame
   useEffect(() => {
     if (balloonKey === 0 || targetTopRef.current == null) return;
+    // Recalculate in case of resize / orientation change
+    const fresh = calcTarget();
+    if (fresh != null) targetTopRef.current = fresh;
     // Give the browser a frame to paint the off-screen position with no transition
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => {
@@ -227,7 +241,7 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <h1>Happy Birthday! ♥︎</h1>
+      <h1 style={{ whiteSpace: 'nowrap', fontSize: 'min(10vw, 4.5rem)' }}>Happy 24th Birthday! ♥︎</h1>
 
       <div className="nav-buttons">
         <Link to="/cake"><button>Blow Out the Cake</button></Link>
@@ -334,7 +348,7 @@ const Home = () => {
         </div>
       )}
 
-      <footer className="year-footer">
+      <footer className="year-footer" ref={footerRef}>
         2025
       </footer>
     </div>
